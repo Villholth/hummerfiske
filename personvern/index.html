@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personvern — Hummerfiske</title>
+<meta name="description" content="Hummerfiske samler ikke inn noen data om deg. Teiner, fangst og innstillinger lagres bare på telefonen — personvernerklæringen for appen.">
+<meta property="og:title" content="Personvern — Hummerfiske">
+<meta property="og:description" content="Hummerfiske samler ikke inn noen data om deg. Teiner, fangst og innstillinger lagres bare på telefonen.">
+<meta property="og:image" content="https://villholth.github.io/hummerfiske/og-bilde.png">
+<meta property="og:url" content="https://villholth.github.io/hummerfiske/personvern/">
+<link rel="icon" href="/hummerfiske/ikon.png">
+<link rel="apple-touch-icon" href="/hummerfiske/ikon.png">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --sky-top: #2F6F9F; --sky-bottom: #1A4A72;
+    --crest: #F4F9FC; --accent: #FF9C8C;
+    --text: #F4F9FC; --deep: #0A2440;
+  }
+  body {
+    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    background: var(--deep); color: var(--text); line-height: 1.65;
+  }
+  .hero {
+    position: relative; overflow: hidden; min-height: 240px;
+    background: linear-gradient(var(--sky-top), var(--sky-bottom));
+    text-align: center;
+  }
+  .hero-innhold { position: relative; z-index: 2; padding: 44px 24px 100px; }
+  .hero img { width: 56px; height: 56px; border-radius: 13px;
+              box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+  h1 { font-size: 1.45rem; font-weight: 800; margin-top: 10px; }
+  .dato { opacity: .75; font-size: .88rem; margin-top: 4px; }
+  .sjo { position: absolute; left: 0; right: 0; bottom: 0; height: 64px;
+         z-index: 1; overflow: hidden; }
+  .sjo svg { position: absolute; bottom: 0; left: 0; width: 200%;
+             height: 100%; display: block;
+             animation: driv 18s linear infinite; }
+  @keyframes driv { from { transform: translateX(0); }
+                    to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .sjo svg { animation: none; } }
+
+  main { max-width: 620px; margin: 0 auto; padding: 32px 24px 56px; }
+  .tilbake {
+    display: inline-block; margin-bottom: 20px; padding: 8px 16px;
+    border-radius: 999px; font-size: .9rem; text-decoration: none;
+    color: var(--text); background: rgba(255,156,140,.12);
+    border: 1px solid rgba(255,156,140,.3);
+  }
+  .kortversjon {
+    padding: 20px 24px; border-radius: 18px; font-size: 1.05rem;
+    background: rgba(255,156,140,.10);
+    border: 1px solid rgba(255,156,140,.3);
+  }
+  h2 { font-size: 1.12rem; margin: 30px 0 8px; }
+  p + p { margin-top: 12px; }
+  ul { margin: 10px 0 10px 22px; }
+  li { margin-top: 5px; }
+  a { color: var(--accent); }
+  hr { border: none; border-top: 1px solid rgba(244,249,252,.15); margin: 38px 0; }
+  .en { opacity: .85; font-size: .95rem; }
+  .en h2 { margin-top: 0; }
+  footer {
+    text-align: center; padding: 26px 24px 40px; font-size: .85rem;
+    opacity: .65; line-height: 1.7;
+  }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-innhold">
+    <a href="/hummerfiske/"><img src="/hummerfiske/ikon.png" alt="Hummerfiske-ikonet"></a>
+    <h1>Personvern</h1>
+    <p class="dato">Hummerfiske · Sist oppdatert 1. september 2026</p>
+  </div>
+  <div class="sjo" aria-hidden="true">
+    <svg viewBox="0 0 2400 100" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="vann" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1A4A72"/>
+          <stop offset="1" stop-color="#0A2440"/>
+        </linearGradient>
+      </defs>
+      <path d="M0,38 C200,24 380,52 600,38 C820,26 1000,50 1200,38
+               C1400,24 1580,52 1800,38 C2020,26 2200,50 2400,38
+               L2400,100 L0,100 Z" fill="url(#vann)"/>
+      <path d="M0,38 C200,24 380,52 600,38 C820,26 1000,50 1200,38
+               C1400,24 1580,52 1800,38 C2020,26 2200,50 2400,38"
+            fill="none" stroke="#F4F9FC" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+  </div>
+</header>
+
+<main>
+  <a class="tilbake" href="/hummerfiske/">← Til forsiden</a>
+
+  <div class="kortversjon">
+    <strong>Kort versjon:</strong> Hummerfiske samler ikke inn noen
+    data om deg. Teiner, fangst og innstillinger lagres bare på
+    telefonen din. Appen har ingen kontoer, ingen sporing og ingen
+    annonser.
+  </div>
+
+  <h2>Hva appen gjør med data</h2>
+  <p><strong>Teiner og fangst.</strong> Alt du registrerer — teiner,
+  posisjoner, fangst, kista — lagres kun lokalt på telefonen din.
+  Ingenting sendes til oss; vi har ingen server. Sletter du appen,
+  slettes alt.</p>
+  <p><strong>Posisjon.</strong> Gir du appen tilgang til posisjon,
+  brukes den til å lagre hvor teinene dine står, vise båten på kartet
+  og varsle deg ved fredningssoner. Posisjonen behandles på telefonen
+  og lagres aldri hos oss. Sonevarsler i bakgrunnen krever
+  «Alltid»-tilgang — den spørres det om separat, kun hvis du slår på
+  funksjonen, og du kan når som helst skru den av.</p>
+  <p><strong>Vær og dybde.</strong> For å vise vær og bølger ved en
+  teine sender appen teinas koordinater som et oppslag til MET Norway
+  (api.met.no) — slik alle værapper gjør. Tilsvarende slås dybden opp
+  hos Kartverket, og sjøkartet hentes som kartfliser fra Kartverket.
+  Oppslagene inneholder ingen identitet, ingen konto og ingen
+  sporing; vi mottar og lagrer ingenting. Tjenestene er offentlige,
+  åpne datatjenester underlagt sine egne personvernregler
+  (<a href="https://www.met.no/om-oss/personvern">MET</a>,
+  <a href="https://www.kartverket.no/om-kartverket/personvernerklering">Kartverket</a>).</p>
+  <p><strong>Varsler.</strong> Røktefrister, meldeplikt og sonevarsler
+  planlegges og vises lokalt på telefonen. Ingen servere er
+  involvert.</p>
+  <p><strong>Kjøp.</strong> Hummerfiske Pro kjøpes gjennom App Store.
+  Betalingen håndteres i sin helhet av Apple — vi ser aldri
+  betalingsinformasjon, og appen har ingen egen brukerkonto.</p>
+
+  <h2>Hva appen ikke gjør</h2>
+  <ul>
+    <li>Ingen innsamling av personopplysninger</li>
+    <li>Ingen sporing, ingen annonser, ingen analyse-verktøy</li>
+    <li>Ingen kontoer eller innlogging</li>
+    <li>Ingen deling eller salg av data</li>
+    <li>Ingen tredjeparts sporings-SDK-er (kartmotoren MapLibre er
+    åpen kildekode og kjører lokalt)</li>
+  </ul>
+
+  <h2>Dine rettigheter</h2>
+  <p>Siden vi ikke samler inn noen data om deg, finnes det ingenting
+  hos oss å be om innsyn i, rette eller slette. Alle data appen bruker
+  ligger på din egen telefon og er under din kontroll (GDPR,
+  personopplysningsloven).</p>
+
+  <h2>Kontakt</h2>
+  <p>Spørsmål om personvern i Hummerfiske kan sendes til
+  <a href="mailto:danielhellenes@me.com">danielhellenes@me.com</a>.</p>
+
+  <hr>
+
+  <div class="en">
+    <h2>Privacy Policy (English summary)</h2>
+    <p>Hummerfiske does not collect any personal data. Traps, catches
+    and settings are stored locally on your device only and deleted
+    with the app; there is no server and no account. Location, if
+    granted, is used on-device to store trap positions, show your boat
+    on the map and warn about protected zones — "Always" access is
+    requested separately and only if you enable background zone
+    alerts. To show weather and depth, the app sends coordinates as
+    anonymous queries to the public open-data services of MET Norway
+    and the Norwegian Mapping Authority (Kartverket); the queries
+    carry no identity and we receive nothing. Purchases are handled
+    entirely by Apple. No tracking, no ads, no analytics, no
+    third-party tracking SDKs.</p>
+    <p>Contact: <a href="mailto:danielhellenes@me.com">danielhellenes@me.com</a></p>
+  </div>
+</main>
+
+<footer>
+  © 2026 Daniel Hellenes · <a href="/hummerfiske/personvern/">Personvern</a> · <a href="/hummerfiske/vilkar/">Vilkår</a><br>
+  Sjøkart © Kartverket · Soner fra Fiskeridirektoratet
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hummerfiske – teiner, fangst og fredningssoner</title>
+<meta name="description" content="Appen for fritidsfiske etter hummer: røkteklokke på hver teine, Fiskeridirektoratets fredningssoner på ekte sjøkart fra Kartverket, og fangstlogg som viser hvor det fisker best.">
+<meta property="og:title" content="Hummerfiske – teiner, fangst og fredningssoner">
+<meta property="og:description" content="Røkteklokke på hver teine, fredningssoner på ekte sjøkart, og fangstlogg som viser hvor det fisker best. Alt lagres på telefonen.">
+<meta property="og:image" content="https://villholth.github.io/hummerfiske/og-bilde.png">
+<meta property="og:url" content="https://villholth.github.io/hummerfiske/">
+<link rel="icon" href="/hummerfiske/ikon.png">
+<link rel="apple-touch-icon" href="/hummerfiske/ikon.png">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --sky-top: #2F6F9F; --sky-bottom: #1A4A72;
+    --water-deep: #0D2E4C; --crest: #F4F9FC;
+    --accent: #FF9C8C; --sand: #F4C978;
+    --text: #F4F9FC; --deep: #0A2440;
+  }
+  body {
+    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    background: var(--deep); color: var(--text);
+  }
+
+  /* ---- Hero: havet ovenfra og ned, som i appen ---- */
+  .hero {
+    position: relative; overflow: hidden;
+    height: min(78vh, 640px); min-height: 460px;
+    background: linear-gradient(var(--sky-top), var(--sky-bottom));
+  }
+  .hero-innhold {
+    position: relative; z-index: 2; text-align: center;
+    padding: clamp(40px, 8vh, 76px) 24px 0;
+  }
+  .ikon {
+    width: 104px; height: 104px; border-radius: 24px;
+    box-shadow: 0 12px 36px rgba(0,0,0,.4);
+  }
+  h1 {
+    margin-top: 18px; font-size: clamp(2rem, 6vw, 2.6rem);
+    font-weight: 800; letter-spacing: -.02em;
+  }
+  .tagline {
+    margin-top: 8px; font-size: clamp(1.05rem, 3vw, 1.25rem); opacity: .9;
+  }
+  .kommer {
+    display: inline-block; margin-top: 26px; padding: 10px 20px;
+    border-radius: 999px; font-weight: 600; font-size: .98rem;
+    background: rgba(255,156,140,.16); border: 1px solid rgba(255,156,140,.4);
+    color: var(--text);
+  }
+
+  /* Sjøen: to bølgelag som driver sakte mot hverandre. */
+  .sjo { position: absolute; left: 0; right: 0; bottom: 0; height: 34%; z-index: 1; }
+  .sjo .lag { position: absolute; left: 0; bottom: 0; width: 100%; height: 100%; overflow: hidden; }
+  .sjo svg {
+    position: absolute; bottom: 0; left: 0;
+    width: 200%; height: 100%; display: block;
+  }
+  .lag-bak svg  { animation: driv 26s linear infinite; opacity: .55; }
+  .lag-fram svg { animation: driv 16s linear infinite reverse; }
+  @keyframes driv {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lag-bak svg, .lag-fram svg { animation: none; }
+  }
+
+  /* ---- Innhold ---- */
+  main { max-width: 680px; margin: 0 auto; padding: 48px 24px 8px; }
+  .ingress {
+    font-size: 1.12rem; line-height: 1.7; text-align: center;
+    max-width: 560px; margin: 0 auto;
+  }
+  .chips {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    margin: 28px 0 8px;
+  }
+  .chip {
+    padding: 8px 16px; border-radius: 999px; font-size: .92rem;
+    background: rgba(244,249,252,.08); border: 1px solid rgba(244,249,252,.18);
+  }
+  .kort-rad { display: grid; gap: 16px; margin-top: 36px; }
+  @media (min-width: 560px) { .kort-rad { grid-template-columns: 1fr 1fr; } }
+  .kort {
+    padding: 24px; border-radius: 20px;
+    background: rgba(244,249,252,.06);
+    border: 1px solid rgba(244,249,252,.10);
+    transition: transform .15s ease, background .15s ease;
+  }
+  .kort:hover { transform: translateY(-2px); background: rgba(244,249,252,.09); }
+  .kort .emoji { font-size: 1.6rem; }
+  .kort h2 { font-size: 1.1rem; margin: 10px 0 6px; }
+  .kort p { line-height: 1.6; opacity: .9; font-size: .97rem; }
+  .kort a.knapp {
+    display: inline-block; margin-top: 14px; padding: 10px 18px;
+    border-radius: 999px; background: var(--accent); color: var(--deep);
+    font-weight: 600; text-decoration: none; font-size: .95rem;
+  }
+  .kort a.knapp:hover { filter: brightness(1.08); }
+  a { color: var(--accent); }
+  .avsnitt { margin-top: 36px; }
+  .avsnitt h2 { font-size: 1.15rem; margin-bottom: 8px; }
+  .avsnitt p { line-height: 1.7; opacity: .92; }
+  .merknad {
+    margin-top: 36px; text-align: center; font-size: .88rem;
+    opacity: .6; line-height: 1.6;
+  }
+  footer {
+    text-align: center; padding: 26px 24px 40px; font-size: .85rem;
+    opacity: .65; line-height: 1.7;
+  }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-innhold">
+    <img class="ikon" src="/hummerfiske/ikon.png" alt="Hummerfiske-ikonet">
+    <h1>Hummerfiske</h1>
+    <p class="tagline">Teiner, fangst og fredningssoner</p>
+    <span class="kommer">🦞 Kommer i App Store til sesongstart — oktober 2026</span>
+  </div>
+  <div class="sjo" aria-hidden="true">
+    <div class="lag lag-bak">
+      <svg viewBox="0 0 2400 240" preserveAspectRatio="none">
+        <!-- To identiske halvdeler (0–1200 og 1200–2400) gir sømløs loop. -->
+        <path d="M0,70 C150,50 300,94 600,72 C900,50 1050,94 1200,70
+                 C1350,50 1500,94 1800,72 C2100,50 2250,94 2400,70
+                 L2400,240 L0,240 Z"
+              fill="#5E93BC"/>
+      </svg>
+    </div>
+    <div class="lag lag-fram">
+      <svg viewBox="0 0 2400 240" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="vann" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#1A4A72"/>
+            <stop offset="1" stop-color="#0A2440"/>
+          </linearGradient>
+        </defs>
+        <!-- Samme prinsipp: halvdel to er halvdel én forskjøvet 1200. -->
+        <path d="M0,90 C200,64 380,112 600,88 C820,66 1000,110 1200,90
+                 C1400,64 1580,112 1800,88 C2020,66 2200,110 2400,90
+                 L2400,240 L0,240 Z" fill="url(#vann)"/>
+        <path d="M0,90 C200,64 380,112 600,88 C820,66 1000,110 1200,90
+                 C1400,64 1580,112 1800,88 C2020,66 2200,110 2400,90"
+              fill="none" stroke="#F4F9FC" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<main>
+  <p class="ingress"><strong>Loven krever røkting minst én gang i uka —
+  appen husker det for deg.</strong> Hver teine får en tikkende
+  røkteklokke, kartet viser Fiskeridirektoratets fredningssoner på
+  ekte sjøkart, og fangstloggen viser hvor det faktisk fisker best.</p>
+
+  <div class="chips">
+    <span class="chip"><span aria-hidden="true">⏱️</span> Røkteklokke på hver teine</span>
+    <span class="chip"><span aria-hidden="true">🗺️</span> Ekte sjøkart fra Kartverket</span>
+    <span class="chip"><span aria-hidden="true">🚫</span> Fredningssoner og nullfiskeområder</span>
+    <span class="chip"><span aria-hidden="true">📴</span> Kartet kan lagres for dekningshull</span>
+    <span class="chip"><span aria-hidden="true">🔒</span> Alt lagres på telefonen</span>
+  </div>
+
+  <section class="avsnitt">
+    <h2>Informerer — håndhever aldri</h2>
+    <p>Appen forteller deg hva som gjelder der båten er: sesong,
+    teinegrense, minstemål og soner — hentet fra Fiskeridirektoratets
+    åpne data. Men den bestemmer ikke over deg. Du kjenner din egen
+    situasjon best; appen sørger bare for at du aldri mangler
+    informasjonen.</p>
+  </section>
+
+  <section class="avsnitt">
+    <h2>Laget for våte hender</h2>
+    <p>Å sette en teine er ett trykk — posisjon, tid og dybde ordner
+    appen selv (dybden hentes fra Kartverkets dybdedata). Store
+    knapper, tydelige farger og alt det viktige uten å skrive et
+    eneste tegn. Detaljer som agn og teinetype velger du med
+    ett-trykks-knapper når det passer deg.</p>
+  </section>
+
+  <div class="kort-rad">
+    <div class="kort">
+      <span class="emoji" aria-hidden="true">💬</span>
+      <h2>Support</h2>
+      <p>Spørsmål, feilrapporter eller forslag? Alle henvendelser
+      leses og besvares.</p>
+      <a class="knapp" href="mailto:danielhellenes@me.com">Send e-post</a>
+    </div>
+    <div class="kort">
+      <span class="emoji" aria-hidden="true">🔒</span>
+      <h2>Personvern</h2>
+      <p>Appen samler ikke inn noen data om deg. Teiner, fangst og
+      innstillinger blir på telefonen din.</p>
+      <a class="knapp" href="/hummerfiske/personvern/">Les erklæringen</a>
+    </div>
+    <div class="kort">
+      <span class="emoji" aria-hidden="true">👤</span>
+      <h2>Om prosjektet</h2>
+      <p>Hummerfiske er laget av én person på fritiden, av og for
+      folk som setter teiner. Alle henvendelser leses og besvares,
+      men feilretting skjer når jeg har tid.</p>
+    </div>
+  </div>
+
+  <p class="merknad">Sjøkart og dybdedata © Kartverket (CC BY 4.0) ·
+  Fredningssoner og regelområder fra Fiskeridirektoratet (NLOD) ·
+  Vær- og bølgedata fra MET Norway.<br>
+  Appen er et hjelpemiddel, ikke fasit — kontroller alltid gjeldende
+  regler hos Fiskeridirektoratet. Ikke til navigasjon.</p>
+</main>
+
+<footer>
+  © 2026 Daniel Hellenes · <a href="/hummerfiske/personvern/">Personvern</a> · <a href="/hummerfiske/vilkar/">Vilkår</a><br>
+  Sjøkart © Kartverket · Soner fra Fiskeridirektoratet
+</footer>
+
+</body>
+</html>
