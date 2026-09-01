@@ -12,216 +12,629 @@
 <link rel="icon" href="/hummerfiske/ikon.png">
 <link rel="apple-touch-icon" href="/hummerfiske/ikon.png">
 <style>
+  /* ============================================================
+     Hummerfiske — hele siden er én senkning.
+     Overflaten øverst, bunnen nederst; du scroller deg ned
+     langs tauet, akkurat som teina senkes i appens intro.
+     ============================================================ */
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --sky-top: #2F6F9F; --sky-bottom: #1A4A72;
-    --water-deep: #0D2E4C; --crest: #F4F9FC;
-    --accent: #FF9C8C; --sand: #F4C978;
-    --text: #F4F9FC; --deep: #0A2440;
+    --himmel: #2F6F9F;
+    --sjo-1: #1A4A72;
+    --sjo-2: #0D2E4C;
+    --sjo-3: #0A2440;
+    --bunn: #06192C;
+    --skum: #F4F9FC;
+    --korall: #FF9C8C;
+    --rav: #F4C978;
+    --gronn: #8FDCB2;
+    --lilla: #C287E8;
+    --tekst: #F4F9FC;
+    --tekst2: rgba(244,249,252,.78);
+    --tekst3: rgba(244,249,252,.55);
+    --glass: rgba(244,249,252,.06);
+    --glasskant: rgba(244,249,252,.12);
+    --dybdetall: rgba(159,203,232,.45);
   }
+  html { scroll-behavior: smooth; }
   body {
     font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
-    background: var(--deep); color: var(--text);
+    color: var(--tekst);
+    /* Vannsøylen: lysere øverst, mørkere jo dypere du scroller */
+    background: linear-gradient(180deg,
+      var(--himmel) 0, var(--sjo-1) 900px, var(--sjo-2) 2100px,
+      var(--sjo-3) 3400px, var(--bunn) 100%);
+    overflow-x: hidden;
+  }
+  h1, h2, h3 {
+    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
+    letter-spacing: -.015em;
+  }
+  a { color: var(--korall); }
+
+  /* ---------- Overflaten (hero) — appens intro, gjenskapt ---------- */
+  .overflate {
+    position: relative; min-height: 100svh; overflow: hidden;
+  }
+  .scene {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  /* Vannlinja: to tynne bølgestreker som driver mot hverandre —
+     appens eget bølgespråk (strek, aldri fylte åser) */
+  .vannlinje {
+    position: absolute; left: -10%; width: 120%; height: 26px;
+    top: 34svh;
+  }
+  .vannlinje svg { width: 200%; height: 100%; display: block; }
+  .vl-1 svg { animation: driv 14s linear infinite; }
+  .vl-2 { top: calc(34svh + 9px); opacity: .45; }
+  .vl-2 svg { animation: driv 19s linear infinite reverse; }
+  @keyframes driv { to { transform: translateX(-50%); } }
+
+  /* Under vannlinja mørkner det svakt — dybdefølelsen fra introen */
+  .undervann {
+    position: absolute; left: 0; right: 0; top: 34svh; bottom: 0;
+    background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.14));
   }
 
-  /* ---- Hero: havet ovenfra og ned, som i appen ---- */
-  .hero {
-    position: relative; overflow: hidden;
-    height: min(78vh, 640px); min-height: 460px;
-    background: linear-gradient(var(--sky-top), var(--sky-bottom));
+  /* Korallbøya — scenens ene fargeaksent, lander og rir bølgen */
+  .boye {
+    position: absolute; left: 50%; top: 34svh;
+    width: 26px; height: 26px; margin: -13px 0 0 -13px;
+    background: var(--korall); border: 2.5px solid rgba(244,249,252,.92);
+    border-radius: 50%;
+    box-shadow: 0 3px 12px rgba(0,0,0,.35);
+    animation: boyefall 1s cubic-bezier(.33,.85,.45,1) both,
+               boyeri 4.6s ease-in-out 1.15s infinite;
   }
-  .hero-innhold {
+  @keyframes boyefall { from { transform: translateY(-46svh); } to { transform: translateY(0); } }
+  @keyframes boyeri {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+  }
+  /* Plaskringene når bøya treffer vannet */
+  .plask {
+    position: absolute; left: 50%; top: 34svh;
+    width: 90px; height: 26px; margin: -13px 0 0 -45px;
+    border: 1.5px solid rgba(244,249,252,.6); border-radius: 50%;
+    opacity: 0; animation: plask 1s ease-out .95s both;
+  }
+  .plask-2 { animation-delay: 1.1s; animation-duration: 1.2s; }
+  @keyframes plask {
+    0% { opacity: .6; transform: scale(.15); }
+    100% { opacity: 0; transform: scale(1.25); }
+  }
+
+  /* Tau + hanefot + teine: betales ut og senkes vanndempet */
+  .rigg {
+    position: absolute; left: 50%; top: 34svh; width: 0;
+    animation: senk 1.7s cubic-bezier(.45,0,.25,1) 1s both;
+  }
+  @keyframes senk { from { transform: translateY(-16svh) scaleY(.35); } to { transform: translateY(0) scaleY(1); } }
+  .rigg { transform-origin: top center; }
+  .tau {
+    position: absolute; left: -1px; top: 12px; width: 2px; height: 17svh;
+    background: rgba(244,249,252,.5);
+  }
+  .rigg svg {
+    position: absolute; top: calc(17svh + 10px); left: -110px;
+    width: 220px; height: 116px; overflow: visible;
+    animation: svai 7s ease-in-out 2.8s infinite;
+    transform-origin: 50% 0;
+  }
+  @keyframes svai {
+    0%, 100% { transform: rotate(0.9deg); }
+    50% { transform: rotate(-0.9deg); }
+  }
+
+  /* Boblene som stiger fra teina */
+  .boble {
+    position: absolute; left: 50%; border-radius: 50%;
+    background: rgba(244,249,252,.35);
+    animation: stig 5s linear infinite;
+  }
+  .boble-1 { width: 5px; height: 5px; top: 51svh; margin-left: -26px; animation-delay: 2.4s; }
+  .boble-2 { width: 4px; height: 4px; top: 53svh; margin-left: 20px; animation-delay: 3.6s; animation-duration: 6s; }
+  .boble-3 { width: 3px; height: 3px; top: 52svh; margin-left: 4px; animation-delay: 4.8s; animation-duration: 5.5s; }
+  @keyframes stig {
+    0% { opacity: 0; transform: translateY(0); }
+    12% { opacity: .8; }
+    100% { opacity: 0; transform: translateY(-17svh) translateX(8px); }
+  }
+
+  .hero-tekst {
     position: relative; z-index: 2; text-align: center;
-    padding: clamp(40px, 8vh, 76px) 24px 0;
+    padding-top: 72svh;
+    animation: tittelinn 1s cubic-bezier(.2,.7,.3,1) 2s both;
   }
-  .ikon {
-    width: 104px; height: 104px; border-radius: 24px;
-    box-shadow: 0 12px 36px rgba(0,0,0,.4);
+  @keyframes tittelinn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .hero-tekst h1 {
+    font-size: clamp(2.3rem, 7vw, 3.2rem); font-weight: 800;
   }
-  h1 {
-    margin-top: 18px; font-size: clamp(2rem, 6vw, 2.6rem);
-    font-weight: 800; letter-spacing: -.02em;
-  }
-  .tagline {
-    margin-top: 8px; font-size: clamp(1.05rem, 3vw, 1.25rem); opacity: .9;
+  .hero-tekst .tagline {
+    margin-top: 8px; font-size: clamp(1.05rem, 3vw, 1.3rem); color: var(--tekst2);
   }
   .kommer {
-    display: inline-block; margin-top: 26px; padding: 10px 20px;
-    border-radius: 999px; font-weight: 600; font-size: .98rem;
-    background: rgba(255,156,140,.16); border: 1px solid rgba(255,156,140,.4);
-    color: var(--text);
+    display: inline-block; margin-top: 22px; padding: 11px 22px;
+    border-radius: 999px; font-weight: 650; font-size: .98rem;
+    background: rgba(255,156,140,.15); border: 1px solid rgba(255,156,140,.45);
+  }
+  .scroll-hint {
+    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+    z-index: 2; color: var(--tekst3); font-size: .85rem; text-align: center;
+    animation: tittelinn 1s ease 3s both;
+  }
+  .scroll-hint .pil { display: block; animation: dupp 2.2s ease-in-out infinite; }
+  @keyframes dupp { 50% { transform: translateY(5px); } }
+
+  /* ---------- Nedstigningen ---------- */
+  main { position: relative; }
+
+  /* Tauet fortsetter gjennom hele nedstigningen */
+  .taumerke {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 0; position: relative; z-index: 1;
+  }
+  .taumerke::before, .taumerke::after {
+    content: ""; width: 2px; height: 54px;
+    background: rgba(244,249,252,.28);
+  }
+  .taumerke .dybde {
+    font-style: italic; font-size: 1.05rem; color: var(--dybdetall);
+    padding: 6px 2px; font-family: Georgia, "Times New Roman", serif;
   }
 
-  /* Sjøen: to bølgelag som driver sakte mot hverandre. */
-  .sjo { position: absolute; left: 0; right: 0; bottom: 0; height: 34%; z-index: 1; }
-  .sjo .lag { position: absolute; left: 0; bottom: 0; width: 100%; height: 100%; overflow: hidden; }
-  .sjo svg {
-    position: absolute; bottom: 0; left: 0;
-    width: 200%; height: 100%; display: block;
+  /* Løse dybdetall i vannet — som på sjøkartet */
+  .karttall {
+    position: absolute; font-style: italic; color: var(--dybdetall);
+    font-family: Georgia, serif; font-size: 1.1rem; opacity: .55;
+    user-select: none; pointer-events: none;
   }
-  .lag-bak svg  { animation: driv 26s linear infinite; opacity: .55; }
-  .lag-fram svg { animation: driv 16s linear infinite reverse; }
-  @keyframes driv {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
+  .karttall sub { font-size: .68em; }
+
+  .seksjon {
+    position: relative; max-width: 640px; margin: 0 auto;
+    padding: 26px 24px;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .lag-bak svg, .lag-fram svg { animation: none; }
+  .avdekk .seksjon-innhold {
+    opacity: 0; transform: translateY(26px);
+    transition: opacity .7s cubic-bezier(.2,.7,.3,1), transform .7s cubic-bezier(.2,.7,.3,1);
+  }
+  .avdekk .seksjon.inn .seksjon-innhold { opacity: 1; transform: none; }
+
+  .merke {
+    display: inline-block; font-size: .8rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--korall);
+    margin-bottom: 10px;
+  }
+  .merke.gronn { color: var(--gronn); }
+  .merke.rav { color: var(--rav); }
+  .merke.lillam { color: var(--lilla); }
+  .seksjon h2 { font-size: clamp(1.5rem, 4.5vw, 1.9rem); margin-bottom: 10px; }
+  .seksjon p.brod { color: var(--tekst2); line-height: 1.7; font-size: 1.04rem; }
+  .pro-tag {
+    display: inline-block; margin-left: 8px; padding: 2px 10px;
+    font-size: .72rem; font-weight: 700; border-radius: 999px;
+    background: var(--rav); color: #0D2E4C; vertical-align: 4px;
   }
 
-  /* ---- Innhold ---- */
-  main { max-width: 680px; margin: 0 auto; padding: 48px 24px 8px; }
-  .ingress {
-    font-size: 1.12rem; line-height: 1.7; text-align: center;
-    max-width: 560px; margin: 0 auto;
+  /* App-biter: gjenskapt fra appen, i glass */
+  .appbit {
+    margin-top: 20px; padding: 18px; border-radius: 20px;
+    background: var(--glass); border: 1px solid var(--glasskant);
+    backdrop-filter: blur(6px);
   }
-  .chips {
-    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
-    margin: 28px 0 8px;
+  .teinekort-rad { display: flex; align-items: center; gap: 10px; }
+  .boyemarker {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--skum);
+    color: #0D2E4C; font-weight: 800; display: grid; place-items: center;
+    font-family: ui-rounded, system-ui; border: 1px solid rgba(255,255,255,.4);
+    flex: none;
   }
-  .chip {
-    padding: 8px 16px; border-radius: 999px; font-size: .92rem;
-    background: rgba(244,249,252,.08); border: 1px solid rgba(244,249,252,.18);
+  .boyemarker.gul { background: var(--rav); }
+  .teinekort-navn { font-weight: 650; }
+  .frist { display: flex; align-items: baseline; gap: 8px; margin-top: 12px; }
+  .frist .stor {
+    font-family: ui-rounded, system-ui; font-weight: 800;
+    font-size: 1.7rem; color: var(--korall);
   }
-  .kort-rad { display: grid; gap: 16px; margin-top: 36px; }
-  @media (min-width: 560px) { .kort-rad { grid-template-columns: 1fr 1fr; } }
+  .frist .liten { color: var(--tekst2); font-size: .95rem; }
+  .fristbar {
+    margin-top: 10px; height: 6px; border-radius: 3px;
+    background: rgba(255,255,255,.14); overflow: hidden;
+  }
+  .fristbar i {
+    display: block; height: 100%; width: 96%; border-radius: 3px;
+    background: var(--korall);
+  }
+  .meta { margin-top: 10px; color: var(--tekst2); font-size: .92rem; }
+
+  .chiprad { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .sonechip {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 15px; border-radius: 999px; font-size: .92rem; font-weight: 600;
+    background: rgba(13,46,76,.75); border: 1px solid var(--glasskant);
+  }
+  .sonechip .ok { color: var(--gronn); }
+  .fareband {
+    margin-top: 12px; padding: 13px 16px; border-radius: 16px;
+    background: rgba(255,113,91,.16); border: 1px solid rgba(255,156,140,.4);
+    font-weight: 650; font-size: .96rem;
+  }
+  .fareband small { display: block; font-weight: 400; color: var(--tekst2); margin-top: 2px; }
+  .lillaband {
+    background: rgba(194,135,232,.14); border-color: rgba(194,135,232,.4);
+  }
+
+  .trofepille {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--rav); color: #0D2E4C; font-weight: 800;
+    font-family: ui-rounded, system-ui;
+    padding: 5px 13px; border-radius: 999px; border: 1.5px solid rgba(255,255,255,.85);
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .stat { margin-top: 14px; }
+  .stat-rad { display: flex; justify-content: space-between; font-size: .95rem; margin-top: 12px; }
+  .stat-rad b { font-weight: 650; }
+  .stat-rad span { color: var(--tekst2); font-variant-numeric: tabular-nums; }
+  .stat-bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.12); margin-top: 5px; }
+  .stat-bar i { display: block; height: 100%; border-radius: 3px; background: var(--rav); }
+
+  .teller { display: flex; align-items: center; justify-content: center; gap: 22px; margin-top: 6px; }
+  .teller .knapp-rund {
+    width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--glass); border: 1px solid var(--glasskant);
+    font-size: 1.4rem; color: var(--tekst);
+  }
+  .teller .tall {
+    font-family: ui-rounded, system-ui; font-weight: 800; font-size: 2.6rem;
+  }
+  .teller-etikett { text-align: center; color: var(--tekst2); margin-top: 2px; font-size: .95rem; }
+
+  /* ---------- Bunnen ---------- */
+  .bunn {
+    position: relative; overflow: hidden;
+    padding: 60px 0 0;
+  }
+  .bunn-scene {
+    position: relative; height: 300px; max-width: 760px; margin: 0 auto;
+  }
+  .bunn-scene .tau-ned {
+    position: absolute; left: 50%; top: -60px; width: 2px; height: 128px;
+    background: rgba(244,249,252,.4);
+  }
+  .bunn-scene svg.teine-stor {
+    position: absolute; left: 50%; top: 62px; margin-left: -130px;
+    width: 260px; height: 140px; overflow: visible; z-index: 2;
+  }
+  .hummer {
+    position: absolute; z-index: 1; font-size: 40px;
+    left: 50%; top: 138px; margin-left: 10px;
+    transform: translateX(56vw) rotate(-70deg);
+  }
+  .avdekk .bunn.inn .hummer {
+    animation: hummerinn 2.6s cubic-bezier(.35,0,.25,1) .3s forwards;
+  }
+  @keyframes hummerinn {
+    0% { transform: translateX(56vw) rotate(-70deg); }
+    80% { transform: translateX(2px) rotate(-70deg); }
+    100% { transform: translateX(0) rotate(0deg); }
+  }
+  html:not(.avdekk) .hummer { transform: none; }
+  .tang {
+    position: absolute; bottom: 0; width: 26px; height: 88px;
+    transform-origin: bottom center;
+    animation: vaie 6s ease-in-out infinite;
+  }
+  @keyframes vaie { 0%,100% { transform: rotate(-4deg);} 50% { transform: rotate(4deg);} }
+  .tang svg { width: 100%; height: 100%; }
+  .bunnlinje {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 46px;
+    background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.35));
+  }
+  .bunn-boble { position: absolute; border-radius: 50%; background: rgba(244,249,252,.3); }
+  .bb-1 { width: 5px; height: 5px; left: 46%; bottom: 120px; animation: stigbunn 6s linear 1s infinite; }
+  .bb-2 { width: 4px; height: 4px; left: 55%; bottom: 100px; animation: stigbunn 7s linear 3s infinite; }
+  @keyframes stigbunn {
+    0% { opacity: 0; transform: translateY(0); }
+    15% { opacity: .7; }
+    100% { opacity: 0; transform: translateY(-190px) translateX(10px); }
+  }
+
+  .bunn-tekst { text-align: center; max-width: 560px; margin: 26px auto 0; padding: 0 24px; }
+  .bunn-tekst h2 { font-size: clamp(1.5rem, 4.5vw, 1.9rem); }
+  .bunn-tekst p { color: var(--tekst2); line-height: 1.7; margin-top: 10px; }
+  .skittfiske {
+    font-family: ui-rounded, system-ui; font-weight: 800; font-size: 1.2rem;
+    margin-top: 18px;
+  }
+
+  .kort-rad {
+    display: grid; gap: 16px; max-width: 680px;
+    margin: 44px auto 0; padding: 0 24px;
+  }
+  @media (min-width: 600px) { .kort-rad { grid-template-columns: 1fr 1fr 1fr; } }
   .kort {
-    padding: 24px; border-radius: 20px;
-    background: rgba(244,249,252,.06);
-    border: 1px solid rgba(244,249,252,.10);
-    transition: transform .15s ease, background .15s ease;
+    padding: 22px; border-radius: 20px;
+    background: var(--glass); border: 1px solid var(--glasskant);
   }
-  .kort:hover { transform: translateY(-2px); background: rgba(244,249,252,.09); }
-  .kort .emoji { font-size: 1.6rem; }
-  .kort h2 { font-size: 1.1rem; margin: 10px 0 6px; }
-  .kort p { line-height: 1.6; opacity: .9; font-size: .97rem; }
+  .kort h3 { font-size: 1.02rem; margin-bottom: 6px; }
+  .kort p { color: var(--tekst2); font-size: .92rem; line-height: 1.6; }
   .kort a.knapp {
-    display: inline-block; margin-top: 14px; padding: 10px 18px;
-    border-radius: 999px; background: var(--accent); color: var(--deep);
-    font-weight: 600; text-decoration: none; font-size: .95rem;
+    display: inline-block; margin-top: 12px; padding: 9px 16px;
+    border-radius: 999px; background: var(--korall); color: #0D2E4C;
+    font-weight: 650; text-decoration: none; font-size: .92rem;
   }
-  .kort a.knapp:hover { filter: brightness(1.08); }
-  a { color: var(--accent); }
-  .avsnitt { margin-top: 36px; }
-  .avsnitt h2 { font-size: 1.15rem; margin-bottom: 8px; }
-  .avsnitt p { line-height: 1.7; opacity: .92; }
-  .merknad {
-    margin-top: 36px; text-align: center; font-size: .88rem;
-    opacity: .6; line-height: 1.6;
+  .kort a.knapp:focus-visible, a:focus-visible {
+    outline: 2px solid var(--skum); outline-offset: 3px;
+  }
+
+  .attribusjon {
+    max-width: 640px; margin: 40px auto 0; padding: 0 24px;
+    text-align: center; font-size: .86rem; color: var(--tekst3); line-height: 1.7;
   }
   footer {
-    text-align: center; padding: 26px 24px 40px; font-size: .85rem;
-    opacity: .65; line-height: 1.7;
+    text-align: center; padding: 30px 24px 42px; font-size: .85rem;
+    color: var(--tekst3); line-height: 1.8;
   }
   footer a { color: inherit; }
+
+  /* Ro: alt står stille, alt er synlig */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .hummer { transform: none !important; }
+    .avdekk .seksjon-innhold { opacity: 1 !important; transform: none !important; }
+  }
 </style>
 </head>
 <body>
 
-<header class="hero">
-  <div class="hero-innhold">
-    <img class="ikon" src="/hummerfiske/ikon.png" alt="Hummerfiske-ikonet">
+<!-- ============ OVERFLATEN: appens intro, gjenskapt ============ -->
+<header class="overflate">
+  <div class="scene" aria-hidden="true">
+    <div class="vannlinje vl-1">
+      <svg viewBox="0 0 1600 26" preserveAspectRatio="none">
+        <path d="M0,13 C100,5 200,21 400,13 C600,5 700,21 800,13 C900,5 1000,21 1200,13 C1400,5 1500,21 1600,13"
+              fill="none" stroke="rgba(244,249,252,.55)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="vannlinje vl-2">
+      <svg viewBox="0 0 1600 26" preserveAspectRatio="none">
+        <path d="M0,13 C120,7 240,19 400,13 C560,7 680,19 800,13 C920,7 1040,19 1200,13 C1360,7 1480,19 1600,13"
+              fill="none" stroke="rgba(244,249,252,.4)" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="undervann"></div>
+    <div class="plask"></div>
+    <div class="plask plask-2"></div>
+
+    <div class="rigg">
+      <div class="tau"></div>
+      <!-- Hanefot + teine — samme profil som i appen: flat bunn,
+           buet topp, masker og kalv -->
+      <svg viewBox="0 0 220 116" fill="none">
+        <path d="M110,0 L64,26 M110,0 L156,26" stroke="rgba(244,249,252,.5)" stroke-width="2"/>
+        <g transform="translate(0,28)">
+          <defs>
+            <clipPath id="profil">
+              <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"/>
+            </clipPath>
+          </defs>
+          <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"
+                fill="rgba(244,249,252,.08)"/>
+          <g clip-path="url(#profil)" stroke="rgba(244,249,252,.3)" stroke-width="1.2">
+            <path d="M27.5,0 V84 M55,0 V84 M82.5,0 V84 M110,0 V84 M137.5,0 V84 M165,0 V84 M192.5,0 V84"/>
+            <path d="M0,25.2 H220 M0,46.2 H220 M0,67.2 H220"/>
+          </g>
+          <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"
+                stroke="rgba(244,249,252,.9)" stroke-width="3"/>
+          <circle cx="134" cy="50" r="15" stroke="rgba(244,249,252,.9)" stroke-width="3"/>
+          <circle cx="134" cy="50" r="8.5" stroke="rgba(244,249,252,.5)" stroke-width="2"/>
+        </g>
+      </svg>
+    </div>
+    <div class="boble boble-1"></div>
+    <div class="boble boble-2"></div>
+    <div class="boble boble-3"></div>
+    <div class="boye"></div>
+  </div>
+
+  <div class="hero-tekst">
     <h1>Hummerfiske</h1>
     <p class="tagline">Teiner, fangst og fredningssoner</p>
-    <span class="kommer">🦞 Kommer i App Store til sesongstart — oktober 2026</span>
+    <span class="kommer">🦞 I App Store til sesongstart — oktober 2026</span>
   </div>
-  <div class="sjo" aria-hidden="true">
-    <div class="lag lag-bak">
-      <svg viewBox="0 0 2400 240" preserveAspectRatio="none">
-        <!-- To identiske halvdeler (0–1200 og 1200–2400) gir sømløs loop. -->
-        <path d="M0,70 C150,50 300,94 600,72 C900,50 1050,94 1200,70
-                 C1350,50 1500,94 1800,72 C2100,50 2250,94 2400,70
-                 L2400,240 L0,240 Z"
-              fill="#5E93BC"/>
-      </svg>
-    </div>
-    <div class="lag lag-fram">
-      <svg viewBox="0 0 2400 240" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="vann" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#1A4A72"/>
-            <stop offset="1" stop-color="#0A2440"/>
-          </linearGradient>
-        </defs>
-        <!-- Samme prinsipp: halvdel to er halvdel én forskjøvet 1200. -->
-        <path d="M0,90 C200,64 380,112 600,88 C820,66 1000,110 1200,90
-                 C1400,64 1580,112 1800,88 C2020,66 2200,110 2400,90
-                 L2400,240 L0,240 Z" fill="url(#vann)"/>
-        <path d="M0,90 C200,64 380,112 600,88 C820,66 1000,110 1200,90
-                 C1400,64 1580,112 1800,88 C2020,66 2200,110 2400,90"
-              fill="none" stroke="#F4F9FC" stroke-width="5" stroke-linecap="round"/>
-      </svg>
-    </div>
-  </div>
+  <p class="scroll-hint">Bli med ned<span class="pil" aria-hidden="true">⌄</span></p>
 </header>
 
 <main>
-  <p class="ingress"><strong>Loven krever røkting minst én gang i uka —
-  appen husker det for deg.</strong> Hver teine får en tikkende
-  røkteklokke, kartet viser Fiskeridirektoratets fredningssoner på
-  ekte sjøkart, og fangstloggen viser hvor det faktisk fisker best.</p>
+  <!-- ============ 5 m — Røkteklokka ============ -->
+  <div class="taumerke" aria-hidden="true"><span class="dybde">5 m</span></div>
 
-  <div class="chips">
-    <span class="chip"><span aria-hidden="true">⏱️</span> Røkteklokke på hver teine</span>
-    <span class="chip"><span aria-hidden="true">🗺️</span> Ekte sjøkart fra Kartverket</span>
-    <span class="chip"><span aria-hidden="true">🚫</span> Fredningssoner og nullfiskeområder</span>
-    <span class="chip"><span aria-hidden="true">📴</span> Kartet kan lagres for dekningshull</span>
-    <span class="chip"><span aria-hidden="true">🔒</span> Alt lagres på telefonen</span>
-  </div>
-
-  <section class="avsnitt">
-    <h2>Informerer — håndhever aldri</h2>
-    <p>Appen forteller deg hva som gjelder der båten er: sesong,
-    teinegrense, minstemål og soner — hentet fra Fiskeridirektoratets
-    åpne data. Men den bestemmer ikke over deg. Du kjenner din egen
-    situasjon best; appen sørger bare for at du aldri mangler
-    informasjonen.</p>
+  <section class="seksjon">
+    <span class="karttall" style="top:-10px; left:6%;" aria-hidden="true">7<sub>2</sub></span>
+    <span class="karttall" style="top:120px; right:5%;" aria-hidden="true">12</span>
+    <div class="seksjon-innhold">
+      <span class="merke">Røkteklokka</span>
+      <h2>Loven teller døgn.<br>Appen teller for deg.</h2>
+      <p class="brod">Hummerteiner skal røktes minst én gang i uka. I det du
+      setter teina — ett trykk, med våte hender — starter klokka: posisjon,
+      tidspunkt og dybde ordner appen selv, og du får varsel før fristen.</p>
+      <div class="appbit" role="img" aria-label="Eksempel på teinekort i appen: Odden, røktefrist i dag, 18 meter dyp, ståtid seks døgn og 21 timer">
+        <div class="teinekort-rad">
+          <span class="boyemarker" aria-hidden="true">1</span>
+          <span class="teinekort-navn">Odden</span>
+        </div>
+        <div class="frist"><span class="stor">I dag</span><span class="liten">røktefrist</span></div>
+        <div class="fristbar"><i></i></div>
+        <p class="meta">18 m dyp · Makrell · ståtid 6 d 21 t</p>
+      </div>
+    </div>
   </section>
 
-  <section class="avsnitt">
-    <h2>Laget for våte hender</h2>
-    <p>Å sette en teine er ett trykk — posisjon, tid og dybde ordner
-    appen selv (dybden hentes fra Kartverkets dybdedata). Store
-    knapper, tydelige farger og alt det viktige uten å skrive et
-    eneste tegn. Detaljer som agn og teinetype velger du med
-    ett-trykks-knapper når det passer deg.</p>
+  <!-- ============ 10 m — Sonene ============ -->
+  <div class="taumerke" aria-hidden="true"><span class="dybde">10 m</span></div>
+
+  <section class="seksjon">
+    <span class="karttall" style="top:30px; right:8%;" aria-hidden="true">9<sub>6</sub></span>
+    <div class="seksjon-innhold">
+      <span class="merke gronn">Sonene</span>
+      <h2>Rødt betyr én ting: forbud.</h2>
+      <p class="brod">Fiskeridirektoratets fredningssoner og nullfiskeområder
+      ligger inne, tegnet på ekte sjøkart fra Kartverket. Er du trygg, hvisker
+      appen. Nærmer du deg en sone, sier den fra — før teina går i sjøen.
+      Kartet kan lagres på telefonen for dekningshull på fjorden.</p>
+      <div class="chiprad">
+        <span class="sonechip"><span class="ok" aria-hidden="true">✓</span> Utenfor fredningssone · 5,6 km</span>
+      </div>
+      <div class="fareband">I fredningssone — teiner er forbudt her
+        <small>Sandvigdalsfjorden i Kristiansand kommune</small></div>
+      <div class="fareband lillaband">I nullfiskeområde — alt fiske er forbudt her
+        <small>Indre Oslofjord</small></div>
+    </div>
   </section>
 
-  <div class="kort-rad">
-    <div class="kort">
-      <span class="emoji" aria-hidden="true">💬</span>
-      <h2>Support</h2>
-      <p>Spørsmål, feilrapporter eller forslag? Alle henvendelser
-      leses og besvares.</p>
-      <a class="knapp" href="mailto:danielhellenes@me.com">Send e-post</a>
-    </div>
-    <div class="kort">
-      <span class="emoji" aria-hidden="true">🔒</span>
-      <h2>Personvern</h2>
-      <p>Appen samler ikke inn noen data om deg. Teiner, fangst og
-      innstillinger blir på telefonen din.</p>
-      <a class="knapp" href="/hummerfiske/personvern/">Les erklæringen</a>
-    </div>
-    <div class="kort">
-      <span class="emoji" aria-hidden="true">👤</span>
-      <h2>Om prosjektet</h2>
-      <p>Hummerfiske er laget av én person på fritiden, av og for
-      folk som setter teiner. Alle henvendelser leses og besvares,
-      men feilretting skjer når jeg har tid.</p>
-    </div>
-  </div>
+  <!-- ============ 18 m — Fangstplassene ============ -->
+  <div class="taumerke" aria-hidden="true"><span class="dybde">18 m</span></div>
 
-  <p class="merknad">Sjøkart og dybdedata © Kartverket (CC BY 4.0) ·
-  Fredningssoner og regelområder fra Fiskeridirektoratet (NLOD) ·
-  Vær- og bølgedata fra MET Norway.<br>
-  Appen er et hjelpemiddel, ikke fasit — kontroller alltid gjeldende
-  regler hos Fiskeridirektoratet. Ikke til navigasjon.</p>
+  <section class="seksjon">
+    <span class="karttall" style="top:-6px; left:4%;" aria-hidden="true">15<sub>4</sub></span>
+    <span class="karttall" style="top:180px; right:10%;" aria-hidden="true">21</span>
+    <div class="seksjon-innhold">
+      <span class="merke rav">Fangstplassene<span class="pro-tag">PRO</span></span>
+      <h2>Hummeren husker ura.<br>Appen husker den for deg.</h2>
+      <p class="brod">Hver fangst lagres der den skjedde. Plassene klynges på
+      sjøkartet og rangeres — så du vet hvor du skal sette til høsten, og hva
+      som faktisk fisker best hos <em>deg</em>.</p>
+      <div class="appbit" role="img" aria-label="Eksempel fra statistikken: trofémerke med 7 hummer, Sild 2,0 per trekk, Makrell 1,6, Sei 1,0">
+        <span class="trofepille"><span aria-hidden="true">🏆</span> 7</span>
+        <div class="stat">
+          <div class="stat-rad"><b>Sild</b><span>2,0 per trekk · 4 hummer</span></div>
+          <div class="stat-bar"><i style="width:100%"></i></div>
+          <div class="stat-rad"><b>Makrell</b><span>1,6 per trekk · 8 hummer</span></div>
+          <div class="stat-bar"><i style="width:80%"></i></div>
+          <div class="stat-rad"><b>Sei</b><span>1,0 per trekk · 1 hummer</span></div>
+          <div class="stat-bar"><i style="width:50%"></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 26 m — Kista ============ -->
+  <div class="taumerke" aria-hidden="true"><span class="dybde">26 m</span></div>
+
+  <section class="seksjon">
+    <span class="karttall" style="top:40px; left:8%;" aria-hidden="true">24</span>
+    <div class="seksjon-innhold">
+      <span class="merke lillam">Kista</span>
+      <h2>Fra fjord til gryte,<br>med fristene i orden.</h2>
+      <p class="brod">Kista i appen teller hummerne dine, minner deg på mating,
+      og holder styr på meldeplikten i desember og tømmefristen før nyttår —
+      med hendelseslogg du kan stole på.</p>
+      <div class="appbit" role="img" aria-label="Eksempel på kistetelleren i appen: fire hummer i kista">
+        <div class="teller">
+          <span class="knapp-rund" aria-hidden="true">−</span>
+          <span class="tall">4</span>
+          <span class="knapp-rund" aria-hidden="true">+</span>
+        </div>
+        <p class="teller-etikett">hummer i kista · 🦞🦞🦞🦞</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Bunnen ============ -->
+  <div class="taumerke" aria-hidden="true"><span class="dybde">34 m</span></div>
+
+  <section class="bunn" id="bunn">
+    <div class="bunn-scene" aria-hidden="true">
+      <div class="tau-ned"></div>
+      <span class="hummer">🦞</span>
+      <svg class="teine-stor" viewBox="0 0 220 84" fill="none">
+        <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"
+              fill="rgba(244,249,252,.07)"/>
+        <g clip-path="url(#profil2)" stroke="rgba(244,249,252,.3)" stroke-width="1.2">
+          <path d="M27.5,0 V84 M55,0 V84 M82.5,0 V84 M110,0 V84 M137.5,0 V84 M165,0 V84 M192.5,0 V84"/>
+          <path d="M0,25.2 H220 M0,46.2 H220 M0,67.2 H220"/>
+        </g>
+        <defs><clipPath id="profil2">
+          <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"/>
+        </clipPath></defs>
+        <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"
+              stroke="rgba(244,249,252,.9)" stroke-width="3"/>
+        <circle cx="134" cy="50" r="15" stroke="rgba(244,249,252,.9)" stroke-width="3"/>
+        <circle cx="134" cy="50" r="8.5" stroke="rgba(244,249,252,.5)" stroke-width="2"/>
+      </svg>
+      <div class="tang" style="left:14%; animation-delay:0s">
+        <svg viewBox="0 0 26 88"><path d="M10,88 Q0,44 13,4 Q26,48 16,88 Z" fill="rgba(143,220,178,.25)"/></svg>
+      </div>
+      <div class="tang" style="left:22%; height:64px; animation-delay:1.2s">
+        <svg viewBox="0 0 26 88"><path d="M10,88 Q2,40 13,4 Q24,44 16,88 Z" fill="rgba(143,220,178,.18)"/></svg>
+      </div>
+      <div class="tang" style="right:16%; height:76px; animation-delay:.6s">
+        <svg viewBox="0 0 26 88"><path d="M10,88 Q0,44 13,4 Q26,48 16,88 Z" fill="rgba(143,220,178,.22)"/></svg>
+      </div>
+      <div class="tang" style="right:24%; height:52px; animation-delay:1.8s">
+        <svg viewBox="0 0 26 88"><path d="M10,88 Q2,40 13,4 Q24,44 16,88 Z" fill="rgba(143,220,178,.15)"/></svg>
+      </div>
+      <div class="bunn-boble bb-1"></div>
+      <div class="bunn-boble bb-2"></div>
+      <div class="bunnlinje"></div>
+    </div>
+
+    <div class="bunn-tekst seksjon-innhold-fri">
+      <h2>Her nede avgjøres det.</h2>
+      <p>Riktig plass, riktig agn, riktig dybde — og en teine som står lovlig.
+      Hummerfiske holder orden på alt sammen, så du kan bruke tida på det
+      eneste appen ikke kan: å lokke hummeren inn kalven.</p>
+      <p class="skittfiske">Skitt fiske! 🦞</p>
+    </div>
+
+    <div class="kort-rad">
+      <div class="kort">
+        <h3>💬 Support</h3>
+        <p>Spørsmål, feil eller forslag? Alt leses og besvares.</p>
+        <a class="knapp" href="mailto:danielhellenes@me.com">Send e-post</a>
+      </div>
+      <div class="kort">
+        <h3>🔒 Personvern</h3>
+        <p>Appen samler ikke inn noen data om deg. Alt blir på telefonen din.</p>
+        <a class="knapp" href="/hummerfiske/personvern/">Les erklæringen</a>
+      </div>
+      <div class="kort">
+        <h3>👤 Om prosjektet</h3>
+        <p>Laget av én person på fritiden — av og for folk som setter teiner.</p>
+      </div>
+    </div>
+
+    <p class="attribusjon">Sjøkart og dybdedata © Kartverket (CC BY 4.0) ·
+    Fredningssoner og regelområder fra Fiskeridirektoratet (NLOD) ·
+    Vær- og bølgedata fra MET Norway.<br>
+    Appen er et hjelpemiddel, ikke fasit — kontroller alltid gjeldende regler
+    hos Fiskeridirektoratet. Ikke til navigasjon.</p>
+
+    <footer>
+      © 2026 Daniel Hellenes ·
+      <a href="/hummerfiske/personvern/">Personvern</a> ·
+      <a href="/hummerfiske/vilkar/">Vilkår</a>
+    </footer>
+  </section>
 </main>
 
-<footer>
-  © 2026 Daniel Hellenes · <a href="/hummerfiske/personvern/">Personvern</a> · <a href="/hummerfiske/vilkar/">Vilkår</a><br>
-  Sjøkart © Kartverket · Soner fra Fiskeridirektoratet
-</footer>
+<script>
+  // Avdekking ved scroll + hummeren som vandrer inn i teina på bunnen.
+  // Uten JS (eller med redusert bevegelse) er alt synlig fra start.
+  (function () {
+    if (!('IntersectionObserver' in window)) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.documentElement.classList.add('avdekk');
+    var obs = new IntersectionObserver(function (poster) {
+      poster.forEach(function (p) {
+        if (p.isIntersecting) { p.target.classList.add('inn'); obs.unobserve(p.target); }
+      });
+    }, { threshold: 0.25 });
+    document.querySelectorAll('.seksjon, .bunn').forEach(function (el) { obs.observe(el); });
+  })();
+</script>
 
 </body>
 </html>
