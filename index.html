@@ -59,6 +59,41 @@
   .scene {
     position: absolute; inset: 0; pointer-events: none;
   }
+  /* Morgenhimmelen — sesongstartens soloppgang: dyp blå natt øverst,
+     rav-glød der himmelen møter vannlinja (samme scene som eventkortet) */
+  .himmel {
+    position: absolute; left: 0; right: 0; top: 0; height: 34svh;
+    background: linear-gradient(180deg,
+      #16405F 0%, #24567E 46%, #6E6060 76%,
+      #C08258 92%, #E8A45C 100%);
+  }
+  /* Sola — halv skive som står opp av vannlinja, litt av-senter */
+  .solglod {
+    position: absolute; left: 74%; top: 34svh;
+    width: 340px; height: 340px; margin: -170px 0 0 -170px;
+    background: radial-gradient(circle,
+      rgba(247,217,160,.5) 0%, rgba(247,217,160,.18) 42%, rgba(247,217,160,0) 70%);
+    animation: solgryning 2.4s ease-out .3s both;
+  }
+  .sol {
+    position: absolute; left: 74%; top: calc(34svh - 54px);
+    width: 108px; height: 54px; margin-left: -54px; overflow: hidden;
+  }
+  .sol::before {
+    content: ""; position: absolute; left: 0; top: 0;
+    width: 108px; height: 108px; border-radius: 50%;
+    background: #F7D9A0;
+    animation: solopp 2.4s cubic-bezier(.2,.7,.3,1) .3s both;
+  }
+  @keyframes solopp { from { transform: translateY(30px); } to { transform: translateY(0); } }
+  @keyframes solgryning { from { opacity: 0; } to { opacity: 1; } }
+  /* Solstripa i vannet under */
+  .solstripe {
+    position: absolute; left: 74%; top: 34svh;
+    width: 110px; height: 30svh; margin-left: -55px;
+    background: linear-gradient(180deg, rgba(247,217,160,.26), rgba(247,217,160,0));
+    animation: solgryning 2.4s ease-out .6s both;
+  }
   /* Vannlinja: to tynne bølgestreker som driver mot hverandre —
      appens eget bølgespråk (strek, aldri fylte åser) */
   .vannlinje {
@@ -400,6 +435,10 @@
 <!-- ============ OVERFLATEN: appens intro, gjenskapt ============ -->
 <header class="overflate">
   <div class="scene" aria-hidden="true">
+    <div class="himmel"></div>
+    <div class="solglod"></div>
+    <div class="sol"></div>
+    <div class="solstripe"></div>
     <div class="vannlinje vl-1">
       <svg viewBox="0 0 1600 26" preserveAspectRatio="none">
         <path d="M0,13 C100,5 200,21 400,13 C600,5 700,21 800,13 C900,5 1000,21 1200,13 C1400,5 1500,21 1600,13"
