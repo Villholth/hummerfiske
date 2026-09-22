@@ -14,75 +14,172 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --sky-top: #2F6F9F; --sky-bottom: #1A4A72;
-    --crest: #F4F9FC; --accent: #FF9C8C;
-    --text: #F4F9FC; --deep: #0A2440;
+    --himmel: #2F6F9F; --sjo-1: #1A4A72; --sjo-2: #0D2E4C; --sjo-3: #0A2440;
+    --bunn: #06192C; --skum: #F4F9FC; --korall: #FF9C8C; --rav: #F4C978;
+    --gronn: #8FDCB2; --tekst: #F4F9FC; --tekst2: rgba(244,249,252,.78);
+    --tekst3: rgba(244,249,252,.55); --glass: rgba(244,249,252,.06);
+    --glasskant: rgba(244,249,252,.12);
   }
+  html { scroll-behavior: smooth; }
   body {
     font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
-    background: var(--deep); color: var(--text); line-height: 1.65;
+    color: var(--tekst); line-height: 1.65; overflow-x: hidden;
+    /* Samme vannsøyle som forsiden, bare kortere: lyst øverst, mørkt nederst */
+    background: linear-gradient(180deg,
+      var(--himmel) 0, var(--sjo-1) 420px, var(--sjo-2) 1400px,
+      var(--sjo-3) 2400px, var(--bunn) 100%);
   }
-  .hero {
-    position: relative; overflow: hidden; min-height: 240px;
-    background: linear-gradient(var(--sky-top), var(--sky-bottom));
-    text-align: center;
+  h1, h2, h3 {
+    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
+    letter-spacing: -.015em;
   }
-  .hero-innhold { position: relative; z-index: 2; padding: 44px 24px 100px; }
-  .hero img { width: 56px; height: 56px; border-radius: 13px;
-              box-shadow: 0 6px 18px rgba(0,0,0,.35); }
-  h1 { font-size: 1.45rem; font-weight: 800; margin-top: 10px; }
-  .dato { opacity: .75; font-size: .88rem; margin-top: 4px; }
-  .sjo { position: absolute; left: 0; right: 0; bottom: 0; height: 64px;
-         z-index: 1; overflow: hidden; }
-  .sjo svg { position: absolute; bottom: 0; left: 0; width: 200%;
-             height: 100%; display: block;
-             animation: driv 18s linear infinite; }
-  @keyframes driv { from { transform: translateX(0); }
-                    to { transform: translateX(-50%); } }
-  @media (prefers-reduced-motion: reduce) { .sjo svg { animation: none; } }
+  a { color: var(--korall); }
+  a:focus-visible { outline: 2px solid var(--skum); outline-offset: 3px; }
 
-  main { max-width: 620px; margin: 0 auto; padding: 32px 24px 56px; }
-  .tilbake {
-    display: inline-block; margin-bottom: 20px; padding: 8px 16px;
-    border-radius: 999px; font-size: .9rem; text-decoration: none;
-    color: var(--text); background: rgba(255,156,140,.12);
-    border: 1px solid rgba(255,156,140,.3);
+  /* Overflaten: sol, vannlinjer og bølgekanten fra forsiden, i miniatyr */
+  .overflate {
+    position: relative; overflow: hidden; text-align: center;
+    padding: 52px 24px 96px;
   }
-  h2 { font-size: 1.12rem; margin: 30px 0 8px; }
+  .scene { position: absolute; inset: 0; pointer-events: none; }
+  .solglod {
+    position: absolute; left: 50%; top: -140px; width: 420px; height: 420px;
+    transform: translateX(-50%); border-radius: 50%;
+    background: radial-gradient(circle, rgba(244,201,120,.35) 0, rgba(244,201,120,0) 62%);
+  }
+  .vannlinje { position: absolute; left: -10%; width: 120%; height: 26px; opacity: .6; }
+  .vannlinje svg { width: 100%; height: 100%; display: block; }
+  .vl-1 { bottom: 54px; animation: gli 9s ease-in-out infinite alternate; }
+  .vl-2 { bottom: 38px; opacity: .35; animation: gli 12s ease-in-out -4s infinite alternate; }
+  @keyframes gli { from { transform: translateX(-2%); } to { transform: translateX(2%); } }
+  .sjo { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; overflow: hidden; }
+  .sjo svg {
+    position: absolute; bottom: 0; left: 0; width: 200%; height: 100%; display: block;
+    animation: driv 18s linear infinite;
+  }
+  @keyframes driv { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .hero-innhold { position: relative; z-index: 2; }
+  .hero-innhold img {
+    width: 64px; height: 64px; border-radius: 15px;
+    box-shadow: 0 8px 22px rgba(0,0,0,.35);
+  }
+  .merke {
+    display: block; margin-top: 18px; font-size: .8rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--korall);
+  }
+  h1 { font-size: clamp(1.9rem, 6vw, 2.5rem); font-weight: 800; margin-top: 4px; }
+  .dato { color: var(--tekst3); font-size: .9rem; margin-top: 6px; }
+
+  /* Marint snø, som på forsiden */
+  .sno { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .sno i {
+    position: absolute; top: -12px; width: 3px; height: 3px; border-radius: 50%;
+    background: rgba(244,249,252,.32); left: var(--x);
+    animation: snofall var(--t, 28s) linear var(--d, 0s) infinite;
+  }
+  .sno i.stor { width: 4px; height: 4px; background: rgba(244,249,252,.22); }
+  @keyframes snofall {
+    0%   { transform: translateY(0) translateX(0); opacity: 0; }
+    8%   { opacity: 1; }
+    100% { transform: translateY(105vh) translateX(22px); opacity: .2; }
+  }
+  main, .overflate { position: relative; z-index: 1; }
+
+  main { max-width: 640px; margin: 0 auto; padding: 28px 24px 24px; }
+  .tilbake {
+    display: inline-block; margin-bottom: 22px; padding: 9px 16px;
+    border-radius: 999px; font-size: .9rem; font-weight: 650;
+    text-decoration: none; color: var(--tekst);
+    background: var(--glass); border: 1px solid var(--glasskant);
+    transition: transform .15s ease;
+  }
+  .tilbake:hover { transform: translateY(-1px); }
+  .kortversjon {
+    padding: 22px 24px; border-radius: 20px; font-size: 1.05rem; line-height: 1.7;
+    background: rgba(255,156,140,.10); border: 1px solid rgba(255,156,140,.3);
+  }
+  .kortversjon strong { color: var(--korall); }
+  h2 { font-size: clamp(1.25rem, 4vw, 1.45rem); margin: 34px 0 10px; }
+  p { color: var(--tekst2); line-height: 1.7; font-size: 1.02rem; }
+  p strong { color: var(--tekst); }
   p + p { margin-top: 12px; }
-  a { color: var(--accent); }
+  ul { margin: 10px 0 10px 22px; color: var(--tekst2); }
+  li { margin-top: 6px; }
+  hr { border: none; border-top: 1px solid var(--glasskant); margin: 40px 0 26px; }
+  .en {
+    padding: 22px 24px; border-radius: 20px; font-size: .95rem;
+    background: var(--glass); border: 1px solid var(--glasskant);
+  }
+  .en h2 { margin-top: 0; }
+  .en p { color: var(--tekst3); }
+  .attribusjon {
+    max-width: 640px; margin: 40px auto 0; padding: 0 24px;
+    text-align: center; font-size: .86rem; color: var(--tekst3); line-height: 1.7;
+  }
   footer {
-    text-align: center; padding: 26px 24px 40px; font-size: .85rem;
-    opacity: .65; line-height: 1.7;
+    position: relative; z-index: 1; text-align: center;
+    padding: 30px 24px 42px; font-size: .85rem; color: var(--tekst3); line-height: 1.8;
   }
   footer a { color: inherit; }
+
+  /* Ro: alt står stille */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
 
-<header class="hero">
+<header class="overflate">
+  <div class="scene" aria-hidden="true">
+    <div class="solglod"></div>
+    <div class="vannlinje vl-1">
+      <svg viewBox="0 0 1600 26" preserveAspectRatio="none">
+        <path d="M0,13 C100,5 200,21 400,13 C600,5 700,21 800,13 C900,5 1000,21 1200,13 C1400,5 1500,21 1600,13"
+              fill="none" stroke="rgba(244,249,252,.55)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="vannlinje vl-2">
+      <svg viewBox="0 0 1600 26" preserveAspectRatio="none">
+        <path d="M0,13 C100,5 200,21 400,13 C600,5 700,21 800,13 C900,5 1000,21 1200,13 C1400,5 1500,21 1600,13"
+              fill="none" stroke="rgba(244,249,252,.55)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="sjo">
+      <svg viewBox="0 0 2400 100" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="vann" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#1A4A72"/>
+            <stop offset="1" stop-color="#1A4A72" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="M0,38 C200,24 380,52 600,38 C820,26 1000,50 1200,38
+                 C1400,24 1580,52 1800,38 C2020,26 2200,50 2400,38
+                 L2400,100 L0,100 Z" fill="url(#vann)"/>
+        <path d="M0,38 C200,24 380,52 600,38 C820,26 1000,50 1200,38
+                 C1400,24 1580,52 1800,38 C2020,26 2200,50 2400,38"
+              fill="none" stroke="#F4F9FC" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
   <div class="hero-innhold">
     <a href="/hummerfiske/"><img src="/hummerfiske/ikon.png" alt="Hummerfiske-ikonet"></a>
+    <span class="merke">Hummerfiske</span>
     <h1>Vilkår</h1>
-    <p class="dato">Hummerfiske · Sist oppdatert 1. september 2026</p>
-  </div>
-  <div class="sjo" aria-hidden="true">
-    <svg viewBox="0 0 2400 100" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="vann" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#1A4A72"/>
-          <stop offset="1" stop-color="#0A2440"/>
-        </linearGradient>
-      </defs>
-      <path d="M0,38 C200,24 380,52 600,38 C820,26 1000,50 1200,38
-               C1400,24 1580,52 1800,38 C2020,26 2200,50 2400,38
-               L2400,100 L0,100 Z" fill="url(#vann)"/>
-      <path d="M0,38 C200,24 380,52 600,38 C820,26 1000,50 1200,38
-               C1400,24 1580,52 1800,38 C2020,26 2200,50 2400,38"
-            fill="none" stroke="#F4F9FC" stroke-width="4" stroke-linecap="round"/>
-    </svg>
+    <p class="dato">Sist oppdatert 1. september 2026</p>
   </div>
 </header>
+
+<div class="sno" aria-hidden="true">
+  <i style="--x:8%;  --t:31s; --d:-4s"></i>
+  <i style="--x:19%; --t:26s; --d:-17s" class="stor"></i>
+  <i style="--x:31%; --t:34s; --d:-9s"></i>
+  <i style="--x:44%; --t:24s; --d:-21s"></i>
+  <i style="--x:57%; --t:29s; --d:-2s" class="stor"></i>
+  <i style="--x:68%; --t:36s; --d:-13s"></i>
+  <i style="--x:79%; --t:27s; --d:-7s"></i>
+  <i style="--x:91%; --t:33s; --d:-19s" class="stor"></i>
+</div>
 
 <main>
   <a class="tilbake" href="/hummerfiske/">← Til forsiden</a>
@@ -164,9 +261,14 @@
   <a href="mailto:danielhellenes@me.com">danielhellenes@me.com</a></p>
 </main>
 
+<p class="attribusjon">Appen er et hjelpemiddel, ikke fasit. Kontroller alltid gjeldende
+regler hos Fiskeridirektoratet. Ikke til navigasjon.</p>
+
 <footer>
-  © 2026 Daniel Hellenes · <a href="/hummerfiske/personvern/">Personvern</a> · <a href="/hummerfiske/vilkar/">Vilkår</a><br>
-  Sjøkart © Kartverket · Soner fra Fiskeridirektoratet
+  © 2026 Daniel Hellenes ·
+  <a href="/hummerfiske/">Forsiden</a> ·
+  <a href="/hummerfiske/personvern/">Personvern</a> ·
+  <a href="/hummerfiske/vilkar/">Vilkår</a>
 </footer>
 
 </body>
