@@ -11,11 +11,14 @@
 <meta property="og:url" content="https://villholth.github.io/hummerfiske/">
 <link rel="icon" href="/hummerfiske/ikon.png">
 <link rel="apple-touch-icon" href="/hummerfiske/ikon.png">
+<link rel="preload" as="image" href="/hummerfiske/skjermer/02-settkort.jpg">
 <style>
   /* ============================================================
      Hummerfiske — hele siden er én senkning.
      Overflaten øverst, bunnen nederst; du scroller deg ned
      langs tauet, akkurat som teina senkes i appens intro.
+     Alt som beveger seg er transform og opacity, ingenting annet,
+     så det går i 60 bilder i sekundet også på eldre telefoner.
      ============================================================ */
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -27,6 +30,7 @@
     --skum: #F4F9FC;
     --korall: #FF9C8C;
     --rav: #F4C978;
+    --sol: #F7D9A0;
     --gronn: #8FDCB2;
     --lilla: #C287E8;
     --tekst: #F4F9FC;
@@ -35,6 +39,8 @@
     --glass: rgba(244,249,252,.06);
     --glasskant: rgba(244,249,252,.12);
     --dybdetall: rgba(159,203,232,.45);
+    --ramme: #0B1620;
+    --myk: cubic-bezier(.2,.7,.3,1);
   }
   html { scroll-behavior: smooth; }
   body {
@@ -42,8 +48,8 @@
     color: var(--tekst);
     /* Vannsøylen: lysere øverst, mørkere jo dypere du scroller */
     background: linear-gradient(180deg,
-      var(--himmel) 0, var(--sjo-1) 900px, var(--sjo-2) 2100px,
-      var(--sjo-3) 3400px, var(--bunn) 100%);
+      var(--himmel) 0, var(--sjo-1) 1000px, var(--sjo-2) 2600px,
+      var(--sjo-3) 4200px, var(--bunn) 100%);
     overflow-x: hidden;
   }
   h1, h2, h3 {
@@ -51,10 +57,12 @@
     letter-spacing: -.015em;
   }
   a { color: var(--korall); }
+  img { max-width: 100%; }
 
   /* ---------- Overflaten (hero) — appens intro, gjenskapt ---------- */
   .overflate {
     position: relative; min-height: 100svh; overflow: hidden;
+    padding-bottom: 64px;
   }
   .scene {
     position: absolute; inset: 0; pointer-events: none;
@@ -69,30 +77,53 @@
   }
   /* Sola — halv skive som står opp av vannlinja, litt av-senter */
   .solglod {
-    position: absolute; left: 74%; top: 34svh;
+    position: absolute; left: var(--solx, 74%); top: 34svh;
     width: 340px; height: 340px; margin: -170px 0 0 -170px;
     background: radial-gradient(circle,
       rgba(247,217,160,.5) 0%, rgba(247,217,160,.18) 42%, rgba(247,217,160,0) 70%);
     animation: solgryning 2.4s ease-out .3s both;
   }
   .sol {
-    position: absolute; left: 74%; top: calc(34svh - 54px);
+    position: absolute; left: var(--solx, 74%); top: calc(34svh - 54px);
     width: 108px; height: 54px; margin-left: -54px; overflow: hidden;
   }
   .sol::before {
     content: ""; position: absolute; left: 0; top: 0;
     width: 108px; height: 108px; border-radius: 50%;
-    background: #F7D9A0;
-    animation: solopp 2.4s cubic-bezier(.2,.7,.3,1) .3s both;
+    background: var(--sol);
+    animation: solopp 2.4s var(--myk) .3s both;
   }
   @keyframes solopp { from { transform: translateY(30px); } to { transform: translateY(0); } }
   @keyframes solgryning { from { opacity: 0; } to { opacity: 1; } }
   /* Solstripa i vannet under */
   .solstripe {
-    position: absolute; left: 74%; top: 34svh;
+    position: absolute; left: var(--solx, 74%); top: 34svh;
     width: 110px; height: 30svh; margin-left: -55px;
     background: linear-gradient(180deg, rgba(247,217,160,.26), rgba(247,217,160,0));
     animation: solgryning 2.4s ease-out .6s both;
+  }
+  /* Lysstrålene under vannlinja: ett lys, fra sola, som puster sakte.
+     Det er dette som gjør vannet levende når introen er ferdig. */
+  .lys {
+    position: absolute; left: 0; right: 0; top: 34svh; bottom: 0;
+    overflow: hidden; animation: solgryning 2.6s ease-out 1s both;
+  }
+  .straale {
+    position: absolute; top: -6%; height: 112%;
+    left: var(--x); width: var(--b);
+    background: linear-gradient(180deg,
+      rgba(247,217,160,var(--a, .14)) 0%, rgba(247,217,160,calc(var(--a, .14) * .35)) 50%, rgba(247,217,160,0) 100%);
+    /* Ingen blandingsmodus: den tvang hele heroen gjennom en ekstra
+       komposittrunde hvert bilde, og det hakket på vanlige maskiner */
+    transform: skewX(-13deg);
+    animation: straalepust var(--t, 10s) ease-in-out var(--d, 0s) infinite alternate;
+  }
+  /* Når du er dypt nede, står overflaten stille: ingen grunn til å drive
+     bøye, bølger, stråler og telefon som ingen ser */
+  .dypt .overflate .scene *, .dypt .overflate .telefon-flyt { animation-play-state: paused; }
+  @keyframes straalepust {
+    from { opacity: .45; transform: skewX(-13deg) translateX(-10px); }
+    to   { opacity: 1;   transform: skewX(-13deg) translateX(12px); }
   }
   /* Vannlinja: to tynne bølgestreker som driver mot hverandre —
      appens eget bølgespråk (strek, aldri fylte åser) */
@@ -109,7 +140,7 @@
   /* Under vannlinja mørkner det svakt — dybdefølelsen fra introen */
   .undervann {
     position: absolute; left: 0; right: 0; top: 34svh; bottom: 0;
-    background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.14));
+    background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.16));
   }
 
   /* Korallbøya — scenens ene fargeaksent, lander og rir bølgen */
@@ -124,8 +155,8 @@
   }
   @keyframes boyefall { from { transform: translateY(-46svh); } to { transform: translateY(0); } }
   @keyframes boyeri {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(4px); }
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(4px) rotate(6deg); }
   }
   /* Plaskringene når bøya treffer vannet */
   .plask {
@@ -141,8 +172,7 @@
   }
 
   /* Tau + hanefot + teine: senkes uten skalering — riggen glir ned
-     bak vannlinja gjennom en klippemaske, så teina aldri deformeres
-     (scaleY-varianten strakk teina stygt på mobil) */
+     bak vannlinja gjennom en klippemaske, så teina aldri deformeres */
   .riggklipp {
     position: absolute; left: 0; right: 0; top: 34svh; bottom: 0;
     overflow: hidden; pointer-events: none;
@@ -152,15 +182,15 @@
     animation: senk 1.9s cubic-bezier(.45,0,.3,1) .9s both;
   }
   @keyframes senk {
-    from { transform: translateY(calc(-17svh - 150px)); }
+    from { transform: translateY(calc(-1 * var(--tau, 17svh) - 150px)); }
     to { transform: translateY(0); }
   }
   .tau {
-    position: absolute; left: -1px; top: 4px; width: 2px; height: 17svh;
+    position: absolute; left: -1px; top: 4px; width: 2px; height: var(--tau, 17svh);
     background: rgba(244,249,252,.5);
   }
   .rigg svg {
-    position: absolute; top: calc(17svh + 2px); left: -110px;
+    position: absolute; top: calc(var(--tau, 17svh) + 2px); left: -110px;
     width: 220px; height: 116px; overflow: visible;
     animation: svai 7s ease-in-out 2.8s infinite;
     transform-origin: 50% 0;
@@ -176,42 +206,123 @@
     background: rgba(244,249,252,.35);
     animation: stig 5s linear infinite;
   }
-  .boble-1 { width: 5px; height: 5px; top: 51svh; margin-left: -26px; animation-delay: 2.4s; }
-  .boble-2 { width: 4px; height: 4px; top: 53svh; margin-left: 20px; animation-delay: 3.6s; animation-duration: 6s; }
-  .boble-3 { width: 3px; height: 3px; top: 52svh; margin-left: 4px; animation-delay: 4.8s; animation-duration: 5.5s; }
+  .boble-1 { width: 5px; height: 5px; top: calc(34svh + var(--tau, 17svh) + 40px); margin-left: -26px; animation-delay: 2.4s; }
+  .boble-2 { width: 4px; height: 4px; top: calc(34svh + var(--tau, 17svh) + 60px); margin-left: 20px; animation-delay: 3.6s; animation-duration: 6s; }
+  .boble-3 { width: 3px; height: 3px; top: calc(34svh + var(--tau, 17svh) + 50px); margin-left: 4px; animation-delay: 4.8s; animation-duration: 5.5s; }
   @keyframes stig {
     0% { opacity: 0; transform: translateY(0); }
     12% { opacity: .8; }
     100% { opacity: 0; transform: translateY(-17svh) translateX(8px); }
   }
 
-  .hero-tekst {
-    position: relative; z-index: 2; text-align: center;
-    padding-top: 70svh;
-    animation: tittelinn 1s cubic-bezier(.2,.7,.3,1) 2s both;
+  /* ---------- Heroteksten og telefonen ---------- */
+  .hero-innhold {
+    position: relative; z-index: 2;
+    max-width: 1040px; margin: 0 auto;
+    /* Teksten starter alltid under teina, uansett skjermhøyde */
+    padding: calc(34svh + var(--tau, 17svh) + 150px) 24px 0;
+    text-align: center;
   }
-  @keyframes tittelinn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .overlinje {
+    font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--korall); margin-bottom: 12px;
+    animation: tittelinn 1s var(--myk) 1.9s both;
+  }
   .hero-tekst h1 {
-    font-size: clamp(2.3rem, 7vw, 3.2rem); font-weight: 800;
+    font-size: clamp(2.6rem, 8vw, 4.4rem); font-weight: 800; line-height: 1.05;
+    overflow: hidden; padding-bottom: .06em;
   }
+  /* Bokstavene stiger opp av vannet, én etter én */
+  .hero-tekst h1 span {
+    display: inline-block;
+    animation: bokstav .9s cubic-bezier(.2,.7,.2,1) calc(2s + var(--i) * 45ms) both;
+  }
+  @keyframes bokstav { from { transform: translateY(105%); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes tittelinn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   .hero-tekst .tagline {
-    margin-top: 8px; font-size: clamp(1.05rem, 3vw, 1.3rem); color: var(--tekst2);
+    margin-top: 10px; font-size: clamp(1.1rem, 3vw, 1.45rem); color: var(--tekst2);
+    animation: tittelinn 1s var(--myk) 2.6s both;
   }
   .appstore {
-    display: inline-block; margin-top: 20px; line-height: 0;
+    display: inline-block; margin-top: 22px; line-height: 0;
     border-radius: 10px; transition: transform .15s ease;
+    animation: tittelinn 1s var(--myk) 2.9s both;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
   }
   .appstore img { display: block; width: 180px; height: auto; }
   .appstore:hover { transform: translateY(-1px); }
   .appstore:focus-visible { outline: 2px solid var(--tekst2); outline-offset: 4px; }
+
+  /* Telefonen: ekte skjermbilde i en tegnet ramme. Samme komponent i hele
+     nedstigningen; i heroen stiger den opp av dypet etter tittelen. */
+  .telefon {
+    position: relative; width: 100%; aspect-ratio: 1320 / 2868;
+    padding: 4.2%; border-radius: 15.5%/7.2%;
+    background: var(--ramme);
+    box-shadow: 0 22px 40px rgba(0,0,0,.42), 0 2px 0 rgba(255,255,255,.06) inset,
+                0 0 0 1px rgba(255,255,255,.08);
+  }
+  .telefon img {
+    display: block; width: 100%; height: 100%; object-fit: cover;
+    border-radius: 12.5%/5.8%; background: #0D2E4C;
+  }
+  /* Bare telefonen i heroen flyter hele tida. De i nedstigningen beveger
+     seg med scrollen, og koster ingenting når siden står stille. */
+  .hero-telefon .telefon-flyt { animation: flyt 6.5s ease-in-out infinite; }
+  @keyframes flyt {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-9px); }
+  }
+  .hero-telefon {
+    width: 200px; margin: 38px auto 0; perspective: 1200px;
+    animation: stigopp 1.4s var(--myk) 2.3s both;
+  }
+  @keyframes stigopp { from { opacity: 0; transform: translateY(90px); } to { opacity: 1; transform: none; } }
+  .telefon-3d {
+    transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg));
+    transition: transform .5s var(--myk); transform-style: preserve-3d;
+  }
   .scroll-hint {
     position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%);
     z-index: 2; color: var(--tekst3); font-size: .85rem; text-align: center;
     white-space: nowrap;
-    animation: tittelinn 1s ease 3s both;
+    animation: tittelinn 1s ease 3.4s both;
   }
   .scroll-hint .pil { display: inline-block; margin-left: 6px; animation: dupp 2.2s ease-in-out infinite; }
   @keyframes dupp { 50% { transform: translateY(5px); } }
+
+  /* Brede skjermer: tittel til venstre, telefonen flyter i sollyset til
+     høyre, riggen senkes mellom dem. Tauet kortes så teina lander over
+     teksten. */
+  @media (min-width: 900px) {
+    .overflate { --tau: 11svh; --solx: 80%; }
+    .hero-innhold {
+      display: grid; grid-template-columns: minmax(0, 1fr) 300px;
+      align-items: center; column-gap: 24px; text-align: left;
+      padding-top: calc(34svh + var(--tau) + 140px);
+    }
+    .hero-telefon { width: 280px; margin: -24svh 0 0; justify-self: center; }
+  }
+
+  /* ---------- Dybdemåleren: bøya synker langs tauet når du scroller ---------- */
+  .dybdemaaler {
+    position: fixed; right: 14px; top: 50%; transform: translateY(-50%);
+    z-index: 5; display: none; flex-direction: column; align-items: center; gap: 8px;
+    opacity: 0; transition: opacity .5s ease; pointer-events: none;
+  }
+  .avdekk .dybdemaaler { display: flex; }
+  .dybdemaaler.vis { opacity: 1; }
+  .dm-tall {
+    font-family: Georgia, "Times New Roman", serif; font-style: italic;
+    font-size: .95rem; color: var(--dybdetall); font-variant-numeric: tabular-nums;
+    min-width: 3.2em; text-align: center;
+  }
+  .dm-linje { position: relative; width: 2px; height: 160px; background: rgba(244,249,252,.18); border-radius: 1px; }
+  .dm-markor {
+    position: absolute; left: 50%; top: 0; width: 10px; height: 10px; margin-left: -5px;
+    border-radius: 50%; background: var(--korall); border: 2px solid rgba(244,249,252,.9);
+    box-shadow: 0 0 0 4px rgba(255,156,140,.2); will-change: transform;
+  }
 
   /* ---------- Nedstigningen ---------- */
   main { position: relative; }
@@ -238,16 +349,50 @@
   }
   .karttall sub { font-size: .68em; }
 
+  /* En liten stim som krysser vannsøylen et stykke nede */
+  .stim {
+    position: absolute; left: 0; top: 1180px; width: 150px; height: 46px;
+    opacity: 0; pointer-events: none; z-index: 0;
+  }
+  .avdekk .stim { animation: svom 48s linear 5s infinite; }
+  .stim svg { width: 100%; height: 100%; animation: stimbolge 5s ease-in-out infinite; }
+  @keyframes svom {
+    0% { transform: translateX(-170px); opacity: 0; }
+    4% { opacity: .3; }
+    96% { opacity: .3; }
+    100% { transform: translateX(100vw); opacity: 0; }
+  }
+  @keyframes stimbolge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
   .seksjon {
     position: relative; max-width: 640px; margin: 0 auto;
     padding: 26px 24px;
   }
   .avdekk .seksjon-innhold {
     opacity: 0; transform: translateY(26px);
-    transition: opacity .7s cubic-bezier(.2,.7,.3,1), transform .7s cubic-bezier(.2,.7,.3,1);
+    transition: opacity .7s var(--myk), transform .7s var(--myk);
   }
   .avdekk .seksjon.inn .seksjon-innhold { opacity: 1; transform: none; }
 
+  /* Telefonen ved siden av hver seksjon: ekte skjermbilde, og glasskortet
+     ved siden av er nærbildet av det samme. */
+  .telefon-side { width: 210px; margin: 30px auto 0; }
+  .telefon-side figcaption {
+    margin-top: 12px; text-align: center; font-size: .82rem; color: var(--tekst3);
+  }
+  .avdekk .telefon-side {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity .9s var(--myk) .15s, transform .9s var(--myk) .15s;
+  }
+  .avdekk .seksjon.inn .telefon-side { opacity: 1; transform: none; }
+  @media (min-width: 900px) {
+    .seksjon.med-telefon {
+      max-width: 1000px; display: grid; grid-template-columns: minmax(0, 600px) 260px;
+      justify-content: space-between; align-items: center; column-gap: 40px;
+    }
+    .seksjon.med-telefon .telefon-side { width: 260px; margin: 0; }
+    .seksjon.med-telefon.venstre .telefon-side { order: -1; }
+  }
   .merke {
     display: inline-block; font-size: .8rem; font-weight: 700;
     letter-spacing: .08em; text-transform: uppercase; color: var(--korall);
@@ -269,7 +414,6 @@
   .appbit {
     margin-top: 20px; padding: 18px; border-radius: 20px;
     background: var(--glass); border: 1px solid var(--glasskant);
-    backdrop-filter: blur(6px);
   }
   .teinekort-rad { display: flex; align-items: center; gap: 10px; }
   .boyemarker {
@@ -415,15 +559,15 @@
      Alt her utløses når seksjonen kommer til syne (.inn), og bare når
      JS har satt .avdekk — uten JS eller med redusert bevegelse står alt
      ferdig fra start. */
-  .avdekk .fristbar i { width: 0; transition: width 1.6s cubic-bezier(.2,.7,.3,1) .4s; }
+  .avdekk .fristbar i { width: 0; transition: width 1.6s var(--myk) .4s; }
   .avdekk .seksjon.inn .fristbar i { width: 96%; }
 
-  .avdekk .fareband { opacity: 0; transform: translateY(10px); transition: opacity .6s ease var(--d, .9s), transform .6s cubic-bezier(.2,.7,.3,1) var(--d, .9s); }
+  .avdekk .fareband { opacity: 0; transform: translateY(10px); transition: opacity .6s ease var(--d, .9s), transform .6s var(--myk) var(--d, .9s); }
   .avdekk .seksjon.inn .fareband { opacity: 1; transform: none; }
   .avdekk .seksjon.inn .sonechip { animation: chipdemp .6s ease 1.7s both; }
   @keyframes chipdemp { to { opacity: .5; } }
 
-  .avdekk .linjal .maal { transform: scaleX(0); transition: transform 1.5s cubic-bezier(.2,.7,.3,1) .4s; }
+  .avdekk .linjal .maal { transform: scaleX(0); transition: transform 1.5s var(--myk) .4s; }
   .avdekk .seksjon.inn .linjal .maal { transform: scaleX(1); }
   .avdekk .linjal .merke90 { opacity: 0; transition: opacity .5s ease 1.7s; }
   .avdekk .seksjon.inn .linjal .merke90 { opacity: 1; }
@@ -438,7 +582,7 @@
   .avdekk .kompass-tekst { opacity: 0; transition: opacity .6s ease 2.4s; }
   .avdekk .seksjon.inn .kompass-tekst { opacity: 1; }
 
-  .avdekk .stat-bar i { transform: scaleX(0); transform-origin: left center; transition: transform 1.2s cubic-bezier(.2,.7,.3,1) var(--d, .3s); }
+  .avdekk .stat-bar i { transform: scaleX(0); transform-origin: left center; transition: transform 1.2s var(--myk) var(--d, .3s); }
   .avdekk .seksjon.inn .stat-bar i { transform: scaleX(1); }
 
   .avdekk .teller-etikett .lob { opacity: 0; transform: scale(.4); transition: opacity .35s ease var(--d, .4s), transform .5s cubic-bezier(.2,.9,.3,1.4) var(--d, .4s); }
@@ -468,6 +612,13 @@
   .bunn-scene {
     position: relative; height: 300px; max-width: 760px; margin: 0 auto;
   }
+  /* Det siste lyset som når ned: én svak kjegle over teina */
+  .bunnlys {
+    position: absolute; left: 50%; top: -140px; width: 320px; height: 360px; margin-left: -160px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(247,217,160,.11), rgba(247,217,160,0) 68%);
+    animation: pust 11s ease-in-out infinite alternate;
+  }
+  @keyframes pust { from { opacity: .6; } to { opacity: 1; } }
   .bunn-scene .tau-ned {
     position: absolute; left: 50%; top: -60px; width: 2px; height: 128px;
     background: rgba(244,249,252,.4);
@@ -517,6 +668,11 @@
     font-family: ui-rounded, system-ui; font-weight: 800; font-size: 1.2rem;
     margin-top: 18px;
   }
+  .hent {
+    display: inline-block; margin-top: 22px; line-height: 0; border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
+  }
+  .hent img { display: block; width: 180px; height: auto; }
 
   .kort-rad {
     display: grid; gap: 16px; max-width: 680px;
@@ -552,7 +708,8 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
     .hummer { transform: none !important; }
-    .avdekk .seksjon-innhold { opacity: 1 !important; transform: none !important; }
+    .avdekk .seksjon-innhold, .avdekk .telefon-side { opacity: 1 !important; transform: none !important; }
+    .stim, .dybdemaaler { display: none !important; }
   }
 </style>
 </head>
@@ -578,6 +735,11 @@
       </svg>
     </div>
     <div class="undervann"></div>
+    <div class="lys">
+      <i class="straale" style="--x:60%; --b:150px; --a:.11; --t:11s; --d:-2s"></i>
+      <i class="straale" style="--x:71%; --b:80px;  --a:.15; --t:9s;  --d:-5s"></i>
+      <i class="straale" style="--x:80%; --b:220px; --a:.09; --t:14s; --d:-8s"></i>
+    </div>
     <div class="plask"></div>
     <div class="plask plask-2"></div>
 
@@ -614,15 +776,32 @@
     <div class="boye"></div>
   </div>
 
-  <div class="hero-tekst">
-    <h1>Hummerfiske</h1>
-    <p class="tagline">Teiner, fangst og fredningssoner</p>
-    <a class="appstore" href="https://apps.apple.com/no/app/hummerfiske/id6802721661?l=nb">
-      <img src="/hummerfiske/appstore-merke.svg" alt="Last ned fra App Store" width="180" height="60">
-    </a>
+  <div class="hero-innhold">
+    <div class="hero-tekst">
+      <p class="overlinje">Nå i App Store · for iPhone</p>
+      <h1 aria-label="Hummerfiske"><span style="--i:0">H</span><span style="--i:1">u</span><span style="--i:2">m</span><span style="--i:3">m</span><span style="--i:4">e</span><span style="--i:5">r</span><span style="--i:6">f</span><span style="--i:7">i</span><span style="--i:8">s</span><span style="--i:9">k</span><span style="--i:10">e</span></h1>
+      <p class="tagline">Glem aldri hvor teinene står</p>
+      <a class="appstore" href="https://apps.apple.com/no/app/hummerfiske/id6802721661?l=nb">
+        <img src="/hummerfiske/appstore-merke.svg" alt="Last ned fra App Store" width="180" height="60">
+      </a>
+    </div>
+    <figure class="hero-telefon">
+      <div class="telefon-3d">
+        <div class="telefon telefon-flyt">
+          <img src="/hummerfiske/skjermer/02-settkort.jpg" width="720" height="1564"
+               alt="Appen på en iPhone: sjøkartet fra Kartverket med båten, to teiner og kortet «Sett teine her?» som viser at punktet er utenfor fredningssone, 4 meter dypt og 260 meter fra båten">
+        </div>
+      </div>
+    </figure>
   </div>
   <p class="scroll-hint">Bli med ned<span class="pil" aria-hidden="true">⌄</span></p>
 </header>
+
+<!-- Dybdemåleren: bøya synker langs tauet i takt med scrollen -->
+<div class="dybdemaaler" aria-hidden="true">
+  <span class="dm-tall">0 m</span>
+  <span class="dm-linje"><i class="dm-markor"></i></span>
+</div>
 
 <main>
   <div class="sno" aria-hidden="true">
@@ -636,10 +815,23 @@
     <i style="--x:91%; --t:32s; --d:-7s" class="stor"></i>
   </div>
 
+  <!-- Stimen: seks små fisk som krysser vannsøylen rundt 10 meter -->
+  <div class="stim" aria-hidden="true">
+    <svg viewBox="0 0 150 46" fill="rgba(244,249,252,.9)">
+      <path transform="translate(0,14)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
+      <path transform="translate(30,4) scale(.85)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
+      <path transform="translate(34,26) scale(.9)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
+      <path transform="translate(64,12) scale(1.05)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
+      <path transform="translate(96,2) scale(.8)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
+      <path transform="translate(100,28) scale(.75)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
+      <path transform="translate(126,16) scale(.9)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
+    </svg>
+  </div>
+
   <!-- ============ 5 m — Røkteklokka ============ -->
   <div class="taumerke" aria-hidden="true"><span class="dybde">5 m</span></div>
 
-  <section class="seksjon">
+  <section class="seksjon med-telefon">
     <span class="karttall" style="top:-10px; left:6%;" aria-hidden="true">7<sub>2</sub></span>
     <span class="karttall" style="top:120px; right:5%;" aria-hidden="true">12</span>
     <div class="seksjon-innhold">
@@ -660,6 +852,13 @@
         <p class="meta">18 m dyp · Makrell · ståtid 6 d 21 t</p>
       </div>
     </div>
+    <figure class="telefon-side">
+      <div class="telefon">
+        <img src="/hummerfiske/skjermer/01-teiner.jpg" width="720" height="1564" loading="lazy"
+             alt="Lista «Mine teiner» i appen: fire teiner med navn, avstand, røktefrist som nedtelling og en frist som er i dag">
+      </div>
+      <figcaption>Fristen per teine, i lista.</figcaption>
+    </figure>
   </section>
 
   <!-- ============ 10 m — Sonene ============ -->
@@ -729,7 +928,7 @@
   <!-- ============ 18 m — Kompasset ============ -->
   <div class="taumerke" aria-hidden="true"><span class="dybde">18 m</span></div>
 
-  <section class="seksjon">
+  <section class="seksjon med-telefon venstre">
     <span class="karttall" style="top:-6px; left:4%;" aria-hidden="true">15<sub>4</sub></span>
     <span class="karttall" style="top:200px; right:10%;" aria-hidden="true">21</span>
     <div class="seksjon-innhold">
@@ -737,7 +936,8 @@
       <h2>Bøya er borte.<br>Teina er der ennå.</h2>
       <p class="brod">Trykk på avstanden i lista, så peker pila mot teina:
       retning og meter, rett fra der båten ligger. Finn den igjen i bølgene,
-      eller sokne der den står hvis bøya har slitt seg.</p>
+      eller sokne der den står hvis bøya har slitt seg. Og står en teine feil
+      i appen, retter du posisjonen på kartet.</p>
       <div class="appbit" role="img" aria-label="Eksempel på kompasset i appen: pila peker mot teina Odden, 240 meter unna">
         <div class="kompass" aria-hidden="true">
           <span class="n">N</span><span class="s">S</span><span class="e">Ø</span><span class="w">V</span>
@@ -747,12 +947,19 @@
         <p class="kompass-tekst"><span class="stor">240 m</span><span class="liten">til Odden · NØ</span></p>
       </div>
     </div>
+    <figure class="telefon-side">
+      <div class="telefon">
+        <img src="/hummerfiske/skjermer/03-kompass.jpg" width="720" height="1564" loading="lazy"
+             alt="Kompasset i appen: en pil som peker mot teina Odden, 620 meter unna i retning sørvest">
+      </div>
+      <figcaption>Retning og meter til teina.</figcaption>
+    </figure>
   </section>
 
   <!-- ============ 22 m — Fangstplassene og statistikken ============ -->
   <div class="taumerke" aria-hidden="true"><span class="dybde">22 m</span></div>
 
-  <section class="seksjon">
+  <section class="seksjon med-telefon">
     <span class="karttall" style="top:20px; right:6%;" aria-hidden="true">19<sub>8</sub></span>
     <div class="seksjon-innhold">
       <span class="merke rav">Fangstplassene<span class="pro-tag">PRO</span></span>
@@ -773,6 +980,13 @@
         </div>
       </div>
     </div>
+    <figure class="telefon-side">
+      <div class="telefon">
+        <img src="/hummerfiske/skjermer/04-plasser.jpg" width="720" height="1564" loading="lazy"
+             alt="Fangstplassene i appen: sjøkartet med de beste plassene merket, og en liste rangert etter antall hummer">
+      </div>
+      <figcaption>De gode plassene, på sjøkartet.</figcaption>
+    </figure>
   </section>
 
   <!-- ============ 26 m — Sjø og vær ============ -->
@@ -833,6 +1047,7 @@
 
   <section class="bunn" id="bunn">
     <div class="bunn-scene" aria-hidden="true">
+      <div class="bunnlys"></div>
       <div class="tau-ned"></div>
       <span class="hummer">🦞</span>
       <svg class="teine-stor" viewBox="0 0 220 84" fill="none">
@@ -873,6 +1088,9 @@
       Hummerfiske holder orden på alt sammen, så du kan bruke tida på det
       eneste appen ikke kan: å lokke hummeren inn kalven.</p>
       <p class="skittfiske">Skitt fiske! 🦞</p>
+      <a class="hent" href="https://apps.apple.com/no/app/hummerfiske/id6802721661?l=nb">
+        <img src="/hummerfiske/appstore-merke.svg" alt="Last ned fra App Store" width="180" height="60">
+      </a>
     </div>
 
     <div class="kort-rad">
@@ -908,12 +1126,13 @@
 </main>
 
 <script>
-  // Avdekking ved scroll + hummeren som vandrer inn i teina på bunnen.
-  // Uten JS (eller med redusert bevegelse) er alt synlig fra start.
+  // Avdekking ved scroll, dybdemåleren, telefonen som følger musa og
+  // hummeren som vandrer inn i teina. Uten JS (eller med redusert
+  // bevegelse) er alt synlig fra start og ingenting avhenger av dette.
   (function () {
-    if (!('IntersectionObserver' in window)) return;
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     document.documentElement.classList.add('avdekk');
+
     // Tall som teller seg opp (sanketeina) når seksjonen kommer til syne
     function tell(el) {
       var til = parseInt(el.getAttribute('data-tell'), 10);
@@ -930,16 +1149,62 @@
       }
       requestAnimationFrame(steg);
     }
-    var obs = new IntersectionObserver(function (poster) {
-      poster.forEach(function (p) {
-        if (p.isIntersecting) {
-          p.target.classList.add('inn');
-          p.target.querySelectorAll('[data-tell]').forEach(tell);
-          obs.unobserve(p.target);
-        }
+    // Avdekking: en seksjon vises når overkanten har kommet et stykke opp i
+    // vinduet, og den forblir vist. Sjekkes per scrollbilde, ikke med
+    // IntersectionObserver: en rask flikk på telefonen kan hoppe over en
+    // hel seksjon mellom to bilder, og da ville den aldri blitt avdekket.
+    var seksjoner = Array.prototype.slice.call(document.querySelectorAll('.seksjon, .bunn'));
+    function avdekk() {
+      if (!seksjoner.length) return;
+      var grense = window.innerHeight * 0.82;
+      seksjoner = seksjoner.filter(function (el) {
+        if (el.getBoundingClientRect().top > grense) return true;
+        el.classList.add('inn');
+        el.querySelectorAll('[data-tell]').forEach(tell);
+        return false;
       });
-    }, { threshold: 0.25 });
-    document.querySelectorAll('.seksjon, .bunn').forEach(function (el) { obs.observe(el); });
+    }
+
+    // Dybdemåleren: 0 m i overflaten, 34 m på bunnen. Bøya på tauet
+    // følger scrollen, tallet rundes til hele meter.
+    var maaler = document.querySelector('.dybdemaaler');
+    var tall = maaler.querySelector('.dm-tall');
+    var markor = maaler.querySelector('.dm-markor');
+    var ventet = false, forrigeMeter = -1;
+    function vedScroll() {
+      ventet = false;
+      avdekk();
+      var maks = document.documentElement.scrollHeight - window.innerHeight;
+      var p = maks > 0 ? Math.min(1, Math.max(0, window.scrollY / maks)) : 0;
+      var meter = Math.round(p * 34);
+      if (meter !== forrigeMeter) { forrigeMeter = meter; tall.textContent = meter + ' m'; }
+      markor.style.transform = 'translateY(' + (p * 150).toFixed(1) + 'px)';
+      maaler.classList.toggle('vis', p > 0.03 && p < 0.985);
+      // Overflaten settes på pause når den er ute av syne
+      document.documentElement.classList.toggle('dypt', window.scrollY > window.innerHeight * 1.4);
+    }
+    window.addEventListener('scroll', function () {
+      if (!ventet) { ventet = true; requestAnimationFrame(vedScroll); }
+    }, { passive: true });
+    window.addEventListener('resize', vedScroll);
+    vedScroll();
+
+    // Telefonen i heroen vipper svakt etter musa, bare der det finnes en mus
+    var hero = document.querySelector('.overflate');
+    var tlf = document.querySelector('.hero-telefon .telefon-3d');
+    if (tlf && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      hero.addEventListener('pointermove', function (e) {
+        var r = hero.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width - 0.5;
+        var y = (e.clientY - r.top) / r.height - 0.5;
+        tlf.style.setProperty('--ry', (x * 12).toFixed(2) + 'deg');
+        tlf.style.setProperty('--rx', (-y * 9).toFixed(2) + 'deg');
+      });
+      hero.addEventListener('pointerleave', function () {
+        tlf.style.setProperty('--ry', '0deg');
+        tlf.style.setProperty('--rx', '0deg');
+      });
+    }
   })();
 </script>
 
