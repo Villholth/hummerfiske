@@ -2,1211 +2,1572 @@
 <html lang="nb">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hummerfiske – teiner, fangst og fredningssoner</title>
-<meta name="description" content="Appen for fritidsfiske etter hummer: røkteklokke på hver teine, Fiskeridirektoratets fredningssoner på ekte sjøkart fra Kartverket, og fangstlogg som viser hvor det fisker best.">
-<meta property="og:title" content="Hummerfiske – teiner, fangst og fredningssoner">
-<meta property="og:description" content="Røkteklokke på hver teine, fredningssoner på ekte sjøkart, og fangstlogg som viser hvor det fisker best. Alt lagres på telefonen.">
-<meta property="og:image" content="https://villholth.github.io/hummerfiske/og-bilde.png">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hummerfiske · teiner, frister og fredningssoner</title>
+<meta name="description" content="Appen for fritidsfiske etter hummer: røkteklokke på hver teine, Fiskeridirektoratets fredningssoner på Kartverkets sjøkart, hummermål, kompass og sanketeina. For iPhone. Ingen konto, alt lagres på telefonen.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0D2E4C">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="nb_NO">
+<meta property="og:title" content="Hummerfiske · glem aldri hvor teinene står">
+<meta property="og:description" content="Røkteklokke på hver teine, fredningssonene på sjøkartet, hummermål og sanketeina. For iPhone. Ingen konto, alt lagres på telefonen.">
+<meta property="og:image" content="https://villholth.github.io/hummerfiske/bilder/og-bilde.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Hummerfiske-ikonet og navnet på et nattblått sjøkart, ved siden av en iPhone med lista over teiner og røktefristene.">
 <meta property="og:url" content="https://villholth.github.io/hummerfiske/">
-<link rel="icon" href="/hummerfiske/ikon.png">
-<link rel="apple-touch-icon" href="/hummerfiske/ikon.png">
-<link rel="preload" as="image" href="/hummerfiske/skjermer/02-settkort.jpg">
+<link rel="icon" href="/hummerfiske/bilder/ikon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/hummerfiske/bilder/ikon-64.png" sizes="64x64" type="image/png">
+<link rel="apple-touch-icon" href="/hummerfiske/bilder/ikon-180.png">
+<link rel="preload" as="image" href="/hummerfiske/bilder/ikon-1024.jpg">
+<script>
+  /* Før første maling. js: skriptet kjører. bev: siden får bevege seg.
+     intro: første besøk i økta (ikonet åpner seg), intro-kort: senere besøk.
+     vent: introen står på pause til ikonet er dekodet. omslatt: helten står
+     som kart med en gang (stille modus, eller siden er lastet midt på). */
+  (function () {
+    var d = document.documentElement, h = window.innerHeight;
+    window.hfT0 = window.performance ? performance.now() : 0;
+    d.classList.add('js');
+    d.style.setProperty('--vhl', h / 100 + 'px');
+    var rolig = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (rolig || h < 420 || h > 2200) { d.classList.add('omslatt'); return; }
+    d.classList.add('bev');
+    if (window.scrollY > 0) d.classList.add('omslatt');
+    else {
+      var sett = false;
+      try { sett = !!sessionStorage.getItem('hf-intro'); sessionStorage.setItem('hf-intro', '1'); } catch (e) {}
+      if (sett) d.classList.add('intro-kort'); else d.classList.add('intro', 'vent');
+    }
+    // Nødbrems: kommer ikke skriptet i gang, står siden stille og ferdig.
+    setTimeout(function () {
+      if (d.classList.contains('i-gang')) return;
+      d.classList.remove('bev', 'intro', 'intro-kort', 'vent', 'omslag');
+      d.classList.add('omslatt');
+    }, 2500);
+  })();
+</script>
 <style>
-  /* ============================================================
-     Hummerfiske — hele siden er én senkning.
-     Overflaten øverst, bunnen nederst; du scroller deg ned
-     langs tauet, akkurat som teina senkes i appens intro.
-     Alt som beveger seg er transform og opacity, ingenting annet,
-     så det går i 60 bilder i sekundet også på eldre telefoner.
-     ============================================================ */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  :root {
-    --himmel: #2F6F9F;
-    --sjo-1: #1A4A72;
-    --sjo-2: #0D2E4C;
-    --sjo-3: #0A2440;
-    --bunn: #06192C;
-    --skum: #F4F9FC;
-    --korall: #FF9C8C;
-    --rav: #F4C978;
-    --sol: #F7D9A0;
-    --gronn: #8FDCB2;
-    --lilla: #C287E8;
-    --tekst: #F4F9FC;
-    --tekst2: rgba(244,249,252,.78);
-    --tekst3: rgba(244,249,252,.55);
-    --glass: rgba(244,249,252,.06);
-    --glasskant: rgba(244,249,252,.12);
-    --dybdetall: rgba(159,203,232,.45);
-    --ramme: #0B1620;
-    --myk: cubic-bezier(.2,.7,.3,1);
-  }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
-    color: var(--tekst);
-    /* Vannsøylen: lysere øverst, mørkere jo dypere du scroller */
-    background: linear-gradient(180deg,
-      var(--himmel) 0, var(--sjo-1) 1000px, var(--sjo-2) 2600px,
-      var(--sjo-3) 4200px, var(--bunn) 100%);
-    overflow-x: hidden;
-  }
-  h1, h2, h3 {
-    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
-    letter-spacing: -.015em;
-  }
-  a { color: var(--korall); }
-  img { max-width: 100%; }
+/*
+   Hummerfiske · «Kartet som åpner seg»
+   Ikonet åpner seg, legger seg ned og blir kartet. Så kjører båten
+   røkterunden mens du ruller. Bare transform, opacity og
+   stroke-dashoffset beveger seg. Alt som leser layout, skjer i maal().
+   Startverdiene for bevegelse ligger bak .bev, så uten skript og med
+   redusert bevegelse står alt ferdig. */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --hav: #0D2E4C; --hav-topp: #123A5E; --hav-bunn: #092641;
+  --land: #2B4D69; --skum: #F4F9FC;
+  --tekst2: rgba(244,249,252,.82); --tekst3: rgba(244,249,252,.66);
+  --linje: rgba(244,249,252,.8); --lodd: rgba(168,208,236,.66);
+  --ok: #8FDCB2; --gul: #F4C978; --fare: #FF9C8C; --farefyll: rgba(201,79,65,.13);
+  --b-rod: #E86A5A; --b-oransje: #F29A4B; --b-gul: #F4D35E; --b-hvit: #F4F9FC; --b-bla: #8FC7EE; --b-svart: #2A2F36;
+  --rund: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+  --serif: ui-serif, "New York", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --ut: cubic-bezier(.22,1,.36,1);
+  --inn-ut: cubic-bezier(.65,0,.35,1);
+  --fjaer: cubic-bezier(.3,1.6,.45,1);
+  --synk: cubic-bezier(.5,0,.75,0);
+  --leia: 48px; --marg: 20px; --kant: 0px;
+  --vhl: 1vh;
+  --S: min(82vw, calc(var(--vhl) * 40), 420px);
+  --k: .48;
+}
+@supports (height: 1svh) { :root { --vhl: 1svh; } }
+@media (max-width: 359px) { :root { --leia: 40px; --marg: 16px; } }
+@media (min-width: 900px) { :root { --kant: 9px; --S: min(calc(var(--vhl) * 52), 520px); } }
 
-  /* ---------- Overflaten (hero) — appens intro, gjenskapt ---------- */
-  .overflate {
-    position: relative; min-height: 100svh; overflow: hidden;
-    padding-bottom: 64px;
-  }
-  .scene {
-    position: absolute; inset: 0; pointer-events: none;
-  }
-  /* Morgenhimmelen — sesongstartens soloppgang: dyp blå natt øverst,
-     rav-glød der himmelen møter vannlinja (samme scene som eventkortet) */
-  .himmel {
-    position: absolute; left: 0; right: 0; top: 0; height: 34svh;
-    background: linear-gradient(180deg,
-      #16405F 0%, #24567E 46%, #6E6060 76%,
-      #C08258 92%, #E8A45C 100%);
-  }
-  /* Sola — halv skive som står opp av vannlinja, litt av-senter */
-  .solglod {
-    position: absolute; left: var(--solx, 74%); top: 34svh;
-    width: 340px; height: 340px; margin: -170px 0 0 -170px;
-    background: radial-gradient(circle,
-      rgba(247,217,160,.5) 0%, rgba(247,217,160,.18) 42%, rgba(247,217,160,0) 70%);
-    animation: solgryning 2.4s ease-out .3s both;
-  }
-  .sol {
-    position: absolute; left: var(--solx, 74%); top: calc(34svh - 54px);
-    width: 108px; height: 54px; margin-left: -54px; overflow: hidden;
-  }
-  .sol::before {
-    content: ""; position: absolute; left: 0; top: 0;
-    width: 108px; height: 108px; border-radius: 50%;
-    background: var(--sol);
-    animation: solopp 2.4s var(--myk) .3s both;
-  }
-  @keyframes solopp { from { transform: translateY(30px); } to { transform: translateY(0); } }
-  @keyframes solgryning { from { opacity: 0; } to { opacity: 1; } }
-  /* Solstripa i vannet under */
-  .solstripe {
-    position: absolute; left: var(--solx, 74%); top: 34svh;
-    width: 110px; height: 30svh; margin-left: -55px;
-    background: linear-gradient(180deg, rgba(247,217,160,.26), rgba(247,217,160,0));
-    animation: solgryning 2.4s ease-out .6s both;
-  }
-  /* Lysstrålene under vannlinja: ett lys, fra sola, som puster sakte.
-     Det er dette som gjør vannet levende når introen er ferdig. */
-  .lys {
-    position: absolute; left: 0; right: 0; top: 34svh; bottom: 0;
-    overflow: hidden; animation: solgryning 2.6s ease-out 1s both;
-  }
-  .straale {
-    position: absolute; top: -6%; height: 112%;
-    left: var(--x); width: var(--b);
-    background: linear-gradient(180deg,
-      rgba(247,217,160,var(--a, .14)) 0%, rgba(247,217,160,calc(var(--a, .14) * .35)) 50%, rgba(247,217,160,0) 100%);
-    /* Ingen blandingsmodus: den tvang hele heroen gjennom en ekstra
-       komposittrunde hvert bilde, og det hakket på vanlige maskiner */
-    transform: skewX(-13deg);
-    animation: straalepust var(--t, 10s) ease-in-out var(--d, 0s) infinite alternate;
-  }
-  /* Når du er dypt nede, står overflaten stille: ingen grunn til å drive
-     bøye, bølger, stråler og telefon som ingen ser */
-  .dypt .overflate .scene *, .dypt .overflate .telefon-flyt { animation-play-state: paused; }
-  @keyframes straalepust {
-    from { opacity: .45; transform: skewX(-13deg) translateX(-10px); }
-    to   { opacity: 1;   transform: skewX(-13deg) translateX(12px); }
-  }
-  /* Vannlinja: to tynne bølgestreker som driver mot hverandre —
-     appens eget bølgespråk (strek, aldri fylte åser) */
-  .vannlinje {
-    position: absolute; left: -10%; width: 120%; height: 26px;
-    top: 34svh;
-  }
-  .vannlinje svg { width: 200%; height: 100%; display: block; }
-  .vl-1 svg { animation: driv 14s linear infinite; }
-  .vl-2 { top: calc(34svh + 9px); opacity: .45; }
-  .vl-2 svg { animation: driv 19s linear infinite reverse; }
-  @keyframes driv { to { transform: translateX(-50%); } }
+html { color-scheme: dark; background: var(--hav); -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+@supports (overflow: clip) { html { overflow-x: clip; } }
+body {
+  position: relative; overflow-x: hidden;
+  font: 17px/1.6 var(--sans); color: var(--skum);
+  background: var(--hav) linear-gradient(180deg, var(--hav-topp) 0, var(--hav) 1400px, var(--hav) calc(100% - 480px), var(--hav-bunn) 100%);
+  -webkit-font-smoothing: antialiased;
+}
+@supports (overflow: clip) { body { overflow-x: clip; } }
+@media (max-width: 359px) { body { font-size: 16px; } }
+@media (min-width: 900px) { body { font-size: 18px; } }
+::selection { background: #F4C978; color: #0D2E4C; }
+a { color: var(--skum); text-decoration-thickness: 1px; text-underline-offset: .18em; }
+a:focus-visible, .hopp:focus { outline: 2px solid var(--skum); outline-offset: 4px; border-radius: 4px; }
+img { display: block; max-width: 100%; height: auto; }
+h1, h2 { text-wrap: balance; }
+p, li, dd { text-wrap: pretty; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.hopp {
+  position: absolute; left: 12px; top: -80px; z-index: 50;
+  background: var(--skum); color: var(--hav); padding: 12px 16px; border-radius: 10px;
+  font-weight: 650; text-decoration: none;
+}
+.hopp:focus { top: 12px; }
+@keyframes fram { from { opacity: 0; } to { opacity: 1; } }
+@keyframes strek { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 
-  /* Under vannlinja mørkner det svakt — dybdefølelsen fra introen */
-  .undervann {
-    position: absolute; left: 0; right: 0; top: 34svh; bottom: 0;
-    background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.16));
-  }
+/* Kartet: bladene, kjølvannet, rammen og båten */
+.kart { position: absolute; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+/* Dekorlagene er aldri anker for rulleposisjonen (ellers mister leseren plassen ved rotasjon) */
+.kart, .ramme-kart, .baat { overflow-anchor: none; }
+.blad img { display: block; width: 100%; height: auto; }
+.blad .b11 { display: none; }
+.kjol { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
+.kjol svg { position: absolute; overflow: visible; }
+.kjol .plan { fill: none; stroke: rgba(244,249,252,.22); stroke-width: 1.2; stroke-dasharray: 2 7; stroke-linecap: round; }
+.kjol .spor { fill: none; stroke: var(--skum); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: .85; }
 
-  /* Korallbøya — scenens ene fargeaksent, lander og rir bølgen */
-  .boye {
-    position: absolute; left: 50%; top: 34svh;
-    width: 26px; height: 26px; margin: -13px 0 0 -13px;
-    background: var(--korall); border: 2.5px solid rgba(244,249,252,.92);
-    border-radius: 50%;
-    box-shadow: 0 3px 12px rgba(0,0,0,.35);
-    animation: boyefall 1s cubic-bezier(.33,.85,.45,1) both,
-               boyeri 4.6s ease-in-out 1.15s infinite;
-  }
-  @keyframes boyefall { from { transform: translateY(-46svh); } to { transform: translateY(0); } }
-  @keyframes boyeri {
-    0%, 100% { transform: translateY(0) rotate(0); }
-    50% { transform: translateY(4px) rotate(6deg); }
-  }
-  /* Plaskringene når bøya treffer vannet */
-  .plask {
-    position: absolute; left: 50%; top: 34svh;
-    width: 90px; height: 26px; margin: -13px 0 0 -45px;
-    border: 1.5px solid rgba(244,249,252,.6); border-radius: 50%;
-    opacity: 0; animation: plask 1s ease-out .95s both;
-  }
-  .plask-2 { animation-delay: 1.1s; animation-duration: 1.2s; }
-  @keyframes plask {
-    0% { opacity: .6; transform: scale(.15); }
-    100% { opacity: 0; transform: scale(1.25); }
-  }
+.ramme-kart { display: none; }
 
-  /* Tau + hanefot + teine: senkes uten skalering — riggen glir ned
-     bak vannlinja gjennom en klippemaske, så teina aldri deformeres */
-  .riggklipp {
-    position: absolute; left: 0; right: 0; top: 34svh; bottom: 0;
-    overflow: hidden; pointer-events: none;
-  }
-  .rigg {
-    position: absolute; left: 50%; top: 0; width: 0;
-    animation: senk 1.9s cubic-bezier(.45,0,.3,1) .9s both;
-  }
-  @keyframes senk {
-    from { transform: translateY(calc(-1 * var(--tau, 17svh) - 150px)); }
-    to { transform: translateY(0); }
-  }
-  .tau {
-    position: absolute; left: -1px; top: 4px; width: 2px; height: var(--tau, 17svh);
-    background: rgba(244,249,252,.5);
-  }
-  .rigg svg {
-    position: absolute; top: calc(var(--tau, 17svh) + 2px); left: -110px;
-    width: 220px; height: 116px; overflow: visible;
-    animation: svai 7s ease-in-out 2.8s infinite;
-    transform-origin: 50% 0;
-  }
-  @keyframes svai {
-    0%, 100% { transform: rotate(0.9deg); }
-    50% { transform: rotate(-0.9deg); }
-  }
+.baat { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 6; pointer-events: none; display: none; }
+.js .baat { display: block; will-change: transform; }
+.baat-inn { position: absolute; left: 0; top: 0; }
+.baat svg { position: absolute; left: -16px; top: -24px; width: 32px; height: 60px; overflow: visible; }
+.baat .skrog { fill: var(--skum); stroke: #0B2238; stroke-width: 1.2; stroke-linejoin: round; }
+.baat .detalj { fill: none; stroke: #0B2238; stroke-width: 1.1; stroke-linecap: round; }
+.baat .motor { fill: #0B2238; }
+.baat .v { fill: none; stroke: rgba(244,249,252,.55); stroke-width: 1.2; stroke-linecap: round; opacity: 0; transition: opacity .5s ease; }
+.baat.gaar .v { opacity: 1; }
+.baat .ring { position: absolute; left: -16px; top: -16px; width: 32px; height: 32px; border-radius: 50%; border: 1.2px solid rgba(244,249,252,.5); opacity: 0; }
+.bev .baat.ligger .ring { animation: ligger 3.2s var(--ut) infinite; }
+.bev .baat.ligger .ring2 { animation-delay: 1.6s; }
+.bev .baat.paus .ring { animation-play-state: paused; }
+@keyframes ligger { 0% { opacity: .55; transform: scale(.35); } 100% { opacity: 0; transform: scale(1.5); } }
 
-  /* Boblene som stiger fra teina */
-  .boble {
-    position: absolute; left: 50%; border-radius: 50%;
-    background: rgba(244,249,252,.35);
-    animation: stig 5s linear infinite;
-  }
-  .boble-1 { width: 5px; height: 5px; top: calc(34svh + var(--tau, 17svh) + 40px); margin-left: -26px; animation-delay: 2.4s; }
-  .boble-2 { width: 4px; height: 4px; top: calc(34svh + var(--tau, 17svh) + 60px); margin-left: 20px; animation-delay: 3.6s; animation-duration: 6s; }
-  .boble-3 { width: 3px; height: 3px; top: calc(34svh + var(--tau, 17svh) + 50px); margin-left: 4px; animation-delay: 4.8s; animation-duration: 5.5s; }
-  @keyframes stig {
-    0% { opacity: 0; transform: translateY(0); }
-    12% { opacity: .8; }
-    100% { opacity: 0; transform: translateY(-17svh) translateX(8px); }
-  }
+/* Helten: ikonet, omslaget og havna */
+.helt {
+  position: relative; z-index: 2; isolation: isolate; overflow: hidden;
+  min-height: calc(var(--vhl) * 100);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 var(--marg) 196px;
+}
+@supports (overflow: clip) { .helt { overflow: clip; } }
+.helt-indre { width: 100%; display: flex; flex-direction: column; align-items: center; }
+/* Sjøen sett fra siden: ikonets vann over hele helten, tones bort i omslaget */
+.vann {
+  position: absolute; inset: 0; z-index: 0; visibility: hidden;
+  background: linear-gradient(180deg, #2E6E9E 0, #245D87 25%, #1A4971 50%, #143C5E 75%, #0D2E4D 100%);
+}
+.havn-hus { position: absolute; left: 0; bottom: 0; width: 100%; height: max(230px, 36.67vw); z-index: 1; pointer-events: none; }
+.havn { position: absolute; left: 0; top: 0; width: 100%; height: 100%; max-width: none; display: block; overflow: hidden; }
+.havn .kyst { stroke-dasharray: 1 1; }
+.havn-hus .start { position: absolute; width: 2px; height: 2px; right: calc(var(--hh) * 262 / 440 - 1px); bottom: calc(var(--hh) * 144 / 440 - 1px); }
+.havn-hus { --hh: max(230px, 36.67vw); }
+/* Havna tones ut mot bunnen av helten, så landet ikke slutter i en rett kant */
+.havn-hus { -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent 100%); mask-image: linear-gradient(180deg, #000 72%, transparent 100%); }
 
-  /* ---------- Heroteksten og telefonen ---------- */
-  .hero-innhold {
-    position: relative; z-index: 2;
-    max-width: 1040px; margin: 0 auto;
-    /* Teksten starter alltid under teina, uansett skjermhøyde */
-    padding: calc(34svh + var(--tau, 17svh) + 150px) 24px 0;
-    text-align: center;
-  }
-  .overlinje {
-    font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--korall); margin-bottom: 12px;
-    animation: tittelinn 1s var(--myk) 1.9s both;
-  }
-  .hero-tekst h1 {
-    font-size: clamp(2.6rem, 8vw, 4.4rem); font-weight: 800; line-height: 1.05;
-    overflow: hidden; padding-bottom: .06em;
-  }
-  /* Bokstavene stiger opp av vannet, én etter én */
-  .hero-tekst h1 span {
-    display: inline-block;
-    animation: bokstav .9s cubic-bezier(.2,.7,.2,1) calc(2s + var(--i) * 45ms) both;
-  }
-  @keyframes bokstav { from { transform: translateY(105%); opacity: 0; } to { transform: none; opacity: 1; } }
-  @keyframes tittelinn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-  .hero-tekst .tagline {
-    margin-top: 10px; font-size: clamp(1.1rem, 3vw, 1.45rem); color: var(--tekst2);
-    animation: tittelinn 1s var(--myk) 2.6s both;
-  }
-  .appstore {
-    display: inline-block; margin-top: 22px; line-height: 0;
-    border-radius: 10px; transition: transform .15s ease;
-    animation: tittelinn 1s var(--myk) 2.9s both;
-    box-shadow: 0 10px 30px rgba(0,0,0,.25);
-  }
-  .appstore img { display: block; width: 180px; height: auto; }
-  .appstore:hover { transform: translateY(-1px); }
-  .appstore:focus-visible { outline: 2px solid var(--tekst2); outline-offset: 4px; }
+.holder {
+  position: relative; z-index: 2; flex: none;
+  width: var(--S); height: var(--S);
+  margin-top: max(28px, calc(env(safe-area-inset-top) + 12px));
+}
+.holder .ramme, .verden, .dor { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.holder .ramme {
+  border-radius: 22.37%; opacity: 0; visibility: hidden;
+  background: linear-gradient(180deg, #2E6E9E 0, #245D87 25%, #1A4971 50%, #143C5E 75%, #0D2E4D 100%);
+}
+.dor { display: none; border-radius: 22.37%; max-width: none; }
+.lag { position: absolute; pointer-events: none; }
+.lag svg { display: block; width: 100%; height: 100%; overflow: visible; }
+/* Alt i verdenen er plassert i ikonets mål (S), som i ikonfila */
+.linjer { left: calc(50% - var(--S) * 3); width: calc(var(--S) * 6); top: calc(var(--S) * .12); height: calc(var(--S) * .1); }
+.linjer path { fill: none; stroke: #fff; }
+.ikontau { left: calc(50% - var(--S) * .0073); width: calc(var(--S) * .0146); top: calc(var(--S) * .163); height: calc(var(--S) * .264); background: rgba(255,255,255,.61); }
+.teine { left: calc(50% - var(--S) * .35); width: calc(var(--S) * .7); top: calc(var(--S) * .42); height: calc(var(--S) * .38); }
+.boble { border-radius: 50%; border: calc(var(--S) * .0042) solid rgba(255,255,255,.3); }
+.boble.b1 { left: 64.36%; top: 31.35%; width: calc(var(--S) * .042); height: calc(var(--S) * .042); }
+.boble.b2 { left: 29.79%; top: 38.28%; width: calc(var(--S) * .0332); height: calc(var(--S) * .0332); }
+.boble.b3 { left: 60.27%; top: 42.75%; width: calc(var(--S) * .024); height: calc(var(--S) * .024); }
+.linjer, .ikontau, .teine, .boble { visibility: hidden; }
+/* Bøya: kartmerke på 23 px som sluttilstand, ikonstørrelse i sidevisningen */
+.ikonboye { left: calc(50% - 11.5px); top: calc(var(--S) * .1626 - 11.5px); width: 23px; height: 23px; }
+.ikonboye > div { width: 100%; height: 100%; }
+/* Røkteklokka på bøya: bunnring og grønt startmerke */
+.klokke-ring { position: absolute; left: calc(50% - 20px); top: calc(var(--S) * .1626 - 20px); width: 40px; height: 40px; overflow: visible; pointer-events: none; }
+.kr-bunn { fill: none; stroke: rgba(244,249,252,.3); stroke-width: 1.4; stroke-dasharray: 1 1; }
+.kr-start { fill: none; stroke: var(--ok); stroke-width: 2.4; stroke-linecap: butt; }
+.boye-merke {
+  position: absolute; left: calc(50% + 30px); top: calc(var(--S) * .1626); transform: translateY(-50%);
+  font: italic 15px/1.2 var(--serif); color: var(--skum); white-space: nowrap; text-align: left;
+}
+.boye-merke small { display: block; font: 600 13px/1.3 var(--rund); font-style: normal; color: var(--ok); }
+/* Loddskudd rundt bøya: ekkoloddet finner dem i omslaget, så kartet ikke står tomt over teksten */
+.lodd-boye { position: absolute; left: calc(50% - var(--S) * .55); top: calc(var(--S) * .0426); width: calc(var(--S) * 1.1); height: calc(var(--S) * .95); overflow: visible; pointer-events: none; }
+.lodd-boye text { font: italic 13px "Iowan Old Style", Georgia, serif; fill: var(--lodd); text-anchor: middle; }
+/* Liten holder: de nærmeste står i veien for bøya og merket */
+@media (max-width: 314px), (max-width: 899px) and (max-height: 644px) { .lodd-boye .n { display: none; } }
+/* Ekkoloddet: to ringer ut fra bøya */
+.ping { position: absolute; left: 50%; top: calc(var(--S) * .1626); width: 0; height: 0; pointer-events: none; }
+.ping svg { position: absolute; left: -320px; top: -320px; width: 640px; height: 640px; overflow: visible; }
+.ping circle { fill: none; stroke: rgba(244,249,252,.4); stroke-width: 1.2; }
+.ping g { transform-origin: 320px 320px; opacity: 0; }
+@keyframes ping { 0% { opacity: .9; transform: scale(.04); } 100% { opacity: 0; transform: scale(1); } }
 
-  /* Telefonen: ekte skjermbilde i en tegnet ramme. Samme komponent i hele
-     nedstigningen; i heroen stiger den opp av dypet etter tittelen. */
-  .telefon {
-    position: relative; width: 100%; aspect-ratio: 1320 / 2868;
-    padding: 4.2%; border-radius: 15.5%/7.2%;
-    background: var(--ramme);
-    box-shadow: 0 22px 40px rgba(0,0,0,.42), 0 2px 0 rgba(255,255,255,.06) inset,
-                0 0 0 1px rgba(255,255,255,.08);
-  }
-  .telefon img {
-    display: block; width: 100%; height: 100%; object-fit: cover;
-    border-radius: 12.5%/5.8%; background: #0D2E4C;
-  }
-  /* Bare telefonen i heroen flyter hele tida. De i nedstigningen beveger
-     seg med scrollen, og koster ingenting når siden står stille. */
-  .hero-telefon .telefon-flyt { animation: flyt 6.5s ease-in-out infinite; }
-  @keyframes flyt {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-9px); }
-  }
-  .hero-telefon {
-    width: 200px; margin: 38px auto 0; perspective: 1200px;
-    animation: stigopp 1.4s var(--myk) 2.3s both;
-  }
-  @keyframes stigopp { from { opacity: 0; transform: translateY(90px); } to { opacity: 1; transform: none; } }
-  .telefon-3d {
-    transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg));
-    transition: transform .5s var(--myk); transform-style: preserve-3d;
-  }
-  .scroll-hint {
-    position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%);
-    z-index: 2; color: var(--tekst3); font-size: .85rem; text-align: center;
-    white-space: nowrap;
-    animation: tittelinn 1s ease 3.4s both;
-  }
-  .scroll-hint .pil { display: inline-block; margin-left: 6px; animation: dupp 2.2s ease-in-out infinite; }
-  @keyframes dupp { 50% { transform: translateY(5px); } }
+.helt-tekst { position: relative; z-index: 2; margin-top: 20px; text-align: center; max-width: 34rem; }
+.stille-ikon { width: 76px; height: 76px; margin: 0 auto 20px; border-radius: 17px; box-shadow: 0 0 0 1px rgba(244,249,252,.18), 0 10px 26px rgba(0,0,0,.35); }
+.bev .stille-ikon { display: none; }
+/* Stille og uten skript: ingen sidevisning å gi plass til, så holderen er lavere og bøya står nærmere ikonet */
+html:not(.bev) .holder { height: calc(var(--S) * .78); }
+html:not(.bev) .lodd-boye { height: calc(var(--S) * .74); }
+h1 { font: 800 clamp(2.75rem, 12.4vw, 4.75rem)/1 var(--rund); letter-spacing: -.035em; }
+.slagord { margin-top: 10px; font: italic 400 clamp(1.25rem, 5.4vw, 1.6rem)/1.3 var(--serif); color: var(--skum); }
+.appstore {
+  display: inline-flex; align-items: center; min-height: 44px; margin-top: 22px; border-radius: 11px; line-height: 0;
+  transition: transform .16s var(--ut);
+}
+.appstore:active { transform: scale(.97); }
+.appstore img { width: 168px; height: auto; }
+.naa { margin-top: 18px; font: italic 400 clamp(1.0625rem, 4.4vw, 1.25rem)/1.4 var(--serif); color: var(--skum); }
+.id { margin-top: 10px; font: 400 13px/1.45 var(--mono); color: var(--skum); }
+@media (max-width: 359px) { .id { font-size: 12.5px; } }
 
-  /* Brede skjermer: tittel til venstre, telefonen flyter i sollyset til
-     høyre, riggen senkes mellom dem. Tauet kortes så teina lander over
-     teksten. */
-  @media (min-width: 900px) {
-    .overflate { --tau: 11svh; --solx: 80%; }
-    .hero-innhold {
-      display: grid; grid-template-columns: minmax(0, 1fr) 300px;
-      align-items: center; column-gap: 24px; text-align: left;
-      padding-top: calc(34svh + var(--tau) + 140px);
-    }
-    .hero-telefon { width: 280px; margin: -24svh 0 0; justify-self: center; }
-  }
+/* Sidevisningen: bare i levende modus, før og under omslaget */
+.bev:not(.omslatt) .vann, .bev:not(.omslatt) .holder .ramme { visibility: visible; }
+.bev:not(.omslatt) .linjer, .bev:not(.omslatt) .ikontau,
+.bev:not(.omslatt) .teine, .bev:not(.omslatt) .boble { visibility: inherit; }
+.bev:not(.omslatt) .ikonboye { left: calc(50% - var(--S) * .075); width: calc(var(--S) * .15); top: calc(var(--S) * .0876); height: calc(var(--S) * .15); }
+.bev:not(.omslag):not(.omslatt) .klokke-ring,
+.bev:not(.omslag):not(.omslatt) .boye-merke,
+.bev:not(.omslag):not(.omslatt) .baat-inn,
+.bev:not(.omslag):not(.omslatt) .kjol,
+.bev:not(.omslag):not(.omslatt) .havn-grunn,
+.bev:not(.omslag):not(.omslatt) .havn .brygge,
+.bev:not(.omslag):not(.omslatt) .havn text,
+.bev:not(.omslag):not(.omslatt) .lodd-boye text { opacity: 0; }
+.bev:not(.omslag):not(.omslatt) .havn .kyst { stroke-dashoffset: 1; }
 
-  /* ---------- Dybdemåleren: bøya synker langs tauet når du scroller ---------- */
-  .dybdemaaler {
-    position: fixed; right: 14px; top: 50%; transform: translateY(-50%);
-    z-index: 5; display: none; flex-direction: column; align-items: center; gap: 8px;
-    opacity: 0; transition: opacity .5s ease; pointer-events: none;
-  }
-  .avdekk .dybdemaaler { display: flex; }
-  .dybdemaaler.vis { opacity: 1; }
-  .dm-tall {
-    font-family: Georgia, "Times New Roman", serif; font-style: italic;
-    font-size: .95rem; color: var(--dybdetall); font-variant-numeric: tabular-nums;
-    min-width: 3.2em; text-align: center;
-  }
-  .dm-linje { position: relative; width: 2px; height: 160px; background: rgba(244,249,252,.18); border-radius: 1px; }
-  .dm-markor {
-    position: absolute; left: 50%; top: 0; width: 10px; height: 10px; margin-left: -5px;
-    border-radius: 50%; background: var(--korall); border: 2px solid rgba(244,249,252,.9);
-    box-shadow: 0 0 0 4px rgba(255,156,140,.2); will-change: transform;
-  }
+/* Introen, første gang (Cs intro): ikonet kommer, vokser og glir over i
+   sin tegnede versjon (match cut). Så åpner havet seg. */
+.intro .dor { display: block; animation: dor 1300ms var(--inn-ut) both; }
+@keyframes dor {
+  0% { opacity: 0; transform: scale(.36); }
+  16% { opacity: 1; transform: scale(.36); }
+  80% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+.intro .verden { animation: vis 1040ms step-end both; }
+@keyframes vis { from { visibility: hidden; } to { visibility: visible; } }
+.intro .holder .ramme { animation: ramme 2150ms both; }
+@keyframes ramme {
+  0% { opacity: 0; transform: none; }
+  48.3% { opacity: 0; transform: none; }
+  48.4% { opacity: 1; transform: none; animation-timing-function: cubic-bezier(.5,0,.2,1); }
+  100% { opacity: 0; transform: scale(3.6); }
+}
+.intro .linjer path { stroke-dasharray: 1 1; animation: linje 2200ms both; }
+@keyframes linje {
+  0%, 52% { stroke-dashoffset: .84; animation-timing-function: cubic-bezier(.3,0,.2,1); }
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes inn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.intro .t1, .intro .t2, .intro .t3, .intro .t4, .intro .t5 { animation: inn 820ms var(--ut) both; }
+.intro .t1 { animation-delay: 1250ms; } .intro .t2 { animation-delay: 1340ms; } .intro .t3 { animation-delay: 1430ms; }
+.intro .t4 { animation-delay: 1520ms; } .intro .t5 { animation-delay: 1610ms; }
+/* Senere besøk i økta: ikonet står alt åpnet */
+.intro-kort .holder .ramme { animation: ramme-kort 900ms cubic-bezier(.5,0,.2,1) both; }
+@keyframes ramme-kort { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(3.6); } }
+.intro-kort .linjer path { stroke-dasharray: 1 1; animation: linje-kort 950ms cubic-bezier(.3,0,.2,1) both; }
+@keyframes linje-kort { from { stroke-dashoffset: .84; } to { stroke-dashoffset: 0; } }
+.intro-kort .t1, .intro-kort .t2, .intro-kort .t3, .intro-kort .t4, .intro-kort .t5 { animation: inn 700ms var(--ut) both; }
+.intro-kort .t2 { animation-delay: 60ms; } .intro-kort .t3 { animation-delay: 120ms; }
+.intro-kort .t4 { animation-delay: 180ms; } .intro-kort .t5 { animation-delay: 240ms; }
+/* Introen står på pause til ikonet er dekodet */
+.vent .dor, .vent .verden, .vent .holder .ramme, .vent .linjer path,
+.vent .t1, .vent .t2, .vent .t3, .vent .t4, .vent .t5 { animation-play-state: paused; }
 
-  /* ---------- Nedstigningen ---------- */
-  main { position: relative; }
+/* Sidevisningen lever etter introen og før omslaget: bøya rir, linjene
+   driver, boblene stiger. Pauses når helten er utenfor skjermen. */
+.bev:not(.intro):not(.intro-kort):not(.omslag):not(.omslatt) .ikonboye > div { animation: rir 7.2s ease-in-out infinite; will-change: transform; }
+@keyframes rir {
+  0%, 100% { transform: none; }
+  25% { transform: translateY(calc(var(--S) * -.0055)) rotate(-3deg); }
+  75% { transform: translateY(calc(var(--S) * .0055)) rotate(3deg); }
+}
+.bev:not(.intro):not(.intro-kort):not(.omslag):not(.omslatt) .linjer svg { animation: driv 9s ease-in-out infinite; will-change: transform; }
+@keyframes driv { 0%, 100% { transform: none; } 50% { transform: translateX(calc(var(--S) * .01)); } }
+.bev:not(.intro):not(.intro-kort):not(.omslag):not(.omslatt) .boble { animation: boble 5.2s linear infinite; will-change: transform, opacity; }
+.bev:not(.intro):not(.intro-kort):not(.omslag):not(.omslatt) .boble.b2 { animation-duration: 6.5s; }
+.bev:not(.intro):not(.intro-kort):not(.omslag):not(.omslatt) .boble.b3 { animation-duration: 7.8s; }
+@keyframes boble {
+  0% { transform: none; opacity: 1; }
+  50% { opacity: 1; }
+  70%, 84.9% { transform: translateY(calc(var(--S) * -.06)); opacity: 0; }
+  85% { transform: none; opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+.helt.paus .ikonboye > div, .helt.paus .linjer svg, .helt.paus .boble { animation-play-state: paused !important; }
 
-  /* Tauet fortsetter gjennom hele nedstigningen */
-  .taumerke {
-    display: flex; flex-direction: column; align-items: center;
-    padding: 8px 0; position: relative; z-index: 1;
-  }
-  .taumerke::before, .taumerke::after {
-    content: ""; width: 2px; height: 54px;
-    background: rgba(244,249,252,.28);
-  }
-  .taumerke .dybde {
-    font-style: italic; font-size: 1.05rem; color: var(--dybdetall);
-    padding: 6px 2px; font-family: Georgia, "Times New Roman", serif;
-  }
+/* Omslaget: tegningen sett fra siden legger seg ned og blir kartet */
+.omslag .teine, .omslag .ikontau { animation: synk 600ms var(--synk) both; }
+@keyframes synk { to { opacity: 0; transform: translateY(calc(var(--S) * .22)); } }
+.omslag .boble { animation: ut 200ms ease both; }
+@keyframes ut { to { opacity: 0; } }
+.omslag .vann { animation: ut 900ms var(--ut) both; }
+.omslag .linjer { animation: ut 500ms var(--ut) 100ms both; }
+.omslag .ikonboye { animation: kartmerke 600ms var(--ut) 200ms both; }
+@keyframes kartmerke { to { transform: scale(var(--k)); } }
+.omslag .havn .kyst { animation: strek 1600ms var(--inn-ut) 300ms both; }
+.omslag .ping g { animation: ping 2200ms var(--ut) 400ms both; }
+.omslag .ping g + g { animation-delay: 650ms; }
+.omslag .kr-bunn { animation: strek 900ms var(--ut) 700ms both; }
+.omslag .kr-start { animation: fram 200ms ease 1600ms both; }
+.for-sesong .kr-start { visibility: hidden; }
+.omslag .havn-grunn { animation: fram 1100ms ease 1000ms both; }
+.omslag .havn text, .omslag .lodd-boye text { animation: fram 500ms ease var(--dl, 1.5s) both; }
+.omslag .baat-inn { animation: baat 500ms var(--fjaer) 1000ms both; }
+.omslag .kjol { animation: fram 500ms ease 1000ms both; }
+@keyframes baat { from { opacity: 0; transform: scale(.6); } }
+.omslag .boye-merke { animation: merke 400ms var(--ut) 1100ms both; }
+@keyframes merke { from { opacity: 0; transform: translate(-6px, -50%); } }
+.omslag .havn .brygge { animation: fram 500ms ease 1200ms both; }
+.omslag:not(.omslatt) .vann, .omslag:not(.omslatt) .teine, .omslag:not(.omslatt) .ikontau,
+.omslag:not(.omslatt) .ikonboye, .omslag:not(.omslatt) .ping g { will-change: transform, opacity; }
+.omslatt .ikonboye { animation: none; }
 
-  /* Løse dybdetall i vannet — som på sjøkartet */
-  .karttall {
-    position: absolute; font-style: italic; color: var(--dybdetall);
-    font-family: Georgia, serif; font-size: 1.1rem; opacity: .55;
-    user-select: none; pointer-events: none;
-  }
-  .karttall sub { font-size: .68em; }
+/* Stoppene */
+main { position: relative; z-index: 2; }
+.stopp { position: relative; padding: 64px 0 18px; }
+.tekst { position: relative; max-width: 620px; margin: 0 auto; padding: 0 var(--marg) 0 var(--leia); }
+/* Lysning: kartet viskes ut under teksten, med myk kant. Står stille. */
+.tekst::before, .pro-tekst::before, .slutt-topp::before, .kreditt::before {
+  content: ""; position: absolute; z-index: -1; inset: -10px -14px; border-radius: 40px;
+  background: rgba(13,46,76,.86); box-shadow: 0 0 36px 26px rgba(13,46,76,.86);
+  pointer-events: none;
+}
+.tekst::before { left: calc(var(--leia) + 14px); right: 0; }
+h2 { font: 800 clamp(1.85rem, 7.6vw, 2.6rem)/1.06 var(--rund); letter-spacing: -.025em; }
+h2 .ord { display: block; overflow: hidden; padding-bottom: .06em; margin-bottom: -.06em; }
+h2 .ord > span { display: block; }
+.tekst p { margin-top: .85em; color: var(--tekst2); }
+.tekst h2 + p { margin-top: 14px; }
+.merknad { margin-top: 22px; padding-left: 14px; border-left: 2px solid rgba(244,249,252,.3); }
+.merknad dt { font: italic 1rem/1.4 var(--serif); color: var(--skum); }
+.merknad dd { font-size: 16px; line-height: 1.5; color: var(--tekst2); margin: 2px 0 12px; }
+.merknad dd:last-child { margin-bottom: 0; }
 
-  /* En liten stim som krysser vannsøylen et stykke nede */
-  .stim {
-    position: absolute; left: 0; top: 1180px; width: 150px; height: 46px;
-    opacity: 0; pointer-events: none; z-index: 0;
-  }
-  .avdekk .stim { animation: svom 48s linear 5s infinite; }
-  .stim svg { width: 100%; height: 100%; animation: stimbolge 5s ease-in-out infinite; }
-  @keyframes svom {
-    0% { transform: translateX(-170px); opacity: 0; }
-    4% { opacity: .3; }
-    96% { opacity: .3; }
-    100% { transform: translateX(100vw); opacity: 0; }
-  }
-  @keyframes stimbolge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.bev .tekst h2 .ord > span { transform: translateY(104%); transition: transform 1s var(--ut) calc(var(--i, 0) * 90ms); }
+.bev .tekst.inn h2 .ord > span { transform: none; }
+.bev .tekst > :not(h2) { opacity: 0; transform: translateY(16px); transition: opacity .8s var(--ut) .25s, transform 1s var(--ut) .25s; }
+.bev .tekst.inn > :not(h2) { opacity: 1; transform: none; }
+.bev .tekst.inn > :nth-child(3) { transition-delay: .33s; }
+.bev .tekst.inn > :nth-child(4) { transition-delay: .41s; }
+.bev .tekst.inn > :nth-child(5) { transition-delay: .49s; }
 
-  .seksjon {
-    position: relative; max-width: 640px; margin: 0 auto;
-    padding: 26px 24px;
-  }
-  .avdekk .seksjon-innhold {
-    opacity: 0; transform: translateY(26px);
-    transition: opacity .7s var(--myk), transform .7s var(--myk);
-  }
-  .avdekk .seksjon.inn .seksjon-innhold { opacity: 1; transform: none; }
+/* Feltet: kartflaten ved hvert stopp, plassert i prosent */
+.felt { position: relative; width: 100%; max-width: 640px; margin: 26px auto 0; aspect-ratio: 1 / var(--fh, 1); }
+.felt > * { position: absolute; left: var(--x); top: var(--y); width: var(--w); }
+.figtekst { font: italic 13px/1.3 var(--serif); color: var(--tekst3); }
+.rp { position: absolute; width: 2px; height: 2px; margin: -1px 0 0 -1px; left: var(--x); top: var(--y); }
+.kun-d, .kun-b { display: none; }
+@media (min-width: 560px) { .kun-s { display: none; } }
+@media (min-width: 560px) and (max-width: 899px) {
+  .kun-b { display: block; }
+  /* Båten kommer til Skjæret fra høyre og går rett ned: merket står på venstre side */
+  #sett .boye .boyenavn { left: auto; right: 50px; text-align: right; }
+}
 
-  /* Telefonen ved siden av hver seksjon: ekte skjermbilde, og glasskortet
-     ved siden av er nærbildet av det samme. */
-  .telefon-side { width: 210px; margin: 30px auto 0; }
-  .telefon-side figcaption {
-    margin-top: 12px; text-align: center; font-size: .82rem; color: var(--tekst3);
-  }
-  .avdekk .telefon-side {
-    opacity: 0; transform: translateY(40px);
-    transition: opacity .9s var(--myk) .15s, transform .9s var(--myk) .15s;
-  }
-  .avdekk .seksjon.inn .telefon-side { opacity: 1; transform: none; }
-  @media (min-width: 900px) {
-    .seksjon.med-telefon {
-      max-width: 1000px; display: grid; grid-template-columns: minmax(0, 600px) 260px;
-      justify-content: space-between; align-items: center; column-gap: 40px;
-    }
-    .seksjon.med-telefon .telefon-side { width: 260px; margin: 0; }
-    .seksjon.med-telefon.venstre .telefon-side { order: -1; }
-  }
-  .merke {
-    display: inline-block; font-size: .8rem; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase; color: var(--korall);
-    margin-bottom: 10px;
-  }
-  .merke.gronn { color: var(--gronn); }
-  .merke.rav { color: var(--rav); }
-  .merke.lillam { color: var(--lilla); }
-  .merke.hvit { color: var(--skum); }
-  .seksjon h2 { font-size: clamp(1.5rem, 4.5vw, 1.9rem); margin-bottom: 10px; }
-  .seksjon p.brod { color: var(--tekst2); line-height: 1.7; font-size: 1.04rem; }
-  .pro-tag {
-    display: inline-block; margin-left: 8px; padding: 2px 10px;
-    font-size: .72rem; font-weight: 700; border-radius: 999px;
-    background: var(--rav); color: #0D2E4C; vertical-align: 4px;
-  }
+/* Telefonene ligger på kartet, høyst 3 grader på skrå */
+.tlf { z-index: 3; }
+.tlf .vipp { transform: rotate(var(--r, 3deg)); }
+.ramme-t {
+  position: relative; padding: 4.4%; border-radius: 15% / 7%; background: #0A1621;
+  box-shadow: 0 0 0 1px rgba(244,249,252,.16), 0 22px 40px rgba(0,0,0,.45);
+}
+.tlf img { width: 100%; border-radius: 11.5% / 5.4%; background: var(--hav); }
+.bev .tlf-inn { opacity: 0; transform: translateY(24px); transition: opacity .9s var(--ut), transform 1.2s var(--ut); }
+.bev .felt.inn .tlf-inn { opacity: 1; transform: none; }
 
-  /* App-biter: gjenskapt fra appen, i glass */
-  .appbit {
-    margin-top: 20px; padding: 18px; border-radius: 20px;
-    background: var(--glass); border: 1px solid var(--glasskant);
-  }
-  .teinekort-rad { display: flex; align-items: center; gap: 10px; }
-  .boyemarker {
-    width: 34px; height: 34px; border-radius: 50%; background: var(--skum);
-    color: #0D2E4C; font-weight: 800; display: grid; place-items: center;
-    font-family: ui-rounded, system-ui; border: 1px solid rgba(255,255,255,.4);
-    flex: none;
-  }
-  .boyemarker.gul { background: var(--rav); }
-  .teinekort-navn { font-weight: 650; }
-  .frist { display: flex; align-items: baseline; gap: 8px; margin-top: 12px; }
-  .frist .stor {
-    font-family: ui-rounded, system-ui; font-weight: 800;
-    font-size: 1.7rem; color: var(--korall);
-  }
-  .frist .liten { color: var(--tekst2); font-size: .95rem; }
-  .fristbar {
-    margin-top: 10px; height: 6px; border-radius: 3px;
-    background: rgba(255,255,255,.14); overflow: hidden;
-  }
-  .fristbar i {
-    display: block; height: 100%; width: 96%; border-radius: 3px;
-    background: var(--korall);
-  }
-  .meta { margin-top: 10px; color: var(--tekst2); font-size: .92rem; }
+/* Bøyene: kule med nummer, røkteklokkens ring (ståtiden) og merket */
+.boye { position: absolute; left: var(--x); top: var(--y); width: 60px; height: 60px; margin: -30px 0 0 -30px; z-index: 4; }
+.felt > .boye { width: 60px; }
+.boye svg { position: relative; z-index: 1; display: block; width: 100%; height: 100%; overflow: visible; }
+.boye .kant { fill: none; stroke: var(--skum); stroke-width: 2; }
+.boye .kule text { font: 800 12.5px var(--rund); fill: #0D2E4C; text-anchor: middle; }
+.boye .kule text.lys { fill: var(--skum); stroke: #0D2E4C; stroke-width: 2.4px; paint-order: stroke; stroke-linejoin: round; }
+.boye .kbunn { fill: none; stroke: rgba(244,249,252,.16); stroke-width: 2.4; }
+.boye .klokke { fill: none; stroke: var(--kc, var(--ok)); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: var(--p) 2; }
+.boye .krus { fill: none; stroke: rgba(244,249,252,.7); stroke-width: 1.3; opacity: 0; }
+.boye .kule, .boye .krus { transform-box: fill-box; transform-origin: center; }
+.boyenavn {
+  position: absolute; left: 50px; top: 50%; transform: translateY(-50%);
+  font: italic 15px/1.2 var(--serif); color: var(--skum); white-space: nowrap;
+}
+.boyenavn small { display: block; font: 600 13px/1.3 var(--rund); font-style: normal; color: var(--kc, var(--ok)); }
+/* Lysning under figurene og bøyemerkene: kartets loddskudd viskes ut, så
+   tallene i figuren står alene. Statisk, males én gang. */
+.boyenavn::before, .rose-etk::before, .kal-les::before, .sonenavn::before, .mm-etk::before, .dom::before, .rokt::before {
+  content: ""; position: absolute; z-index: -1; inset: -7px -14px; border-radius: 16px;
+  background: #0D2E4C; box-shadow: 0 0 12px 10px #0D2E4C; pointer-events: none;
+}
+.klokkefig::before, .rosefig::before {
+  content: ""; position: absolute; z-index: -1; inset: -7%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, #0D2E4C 74%, rgba(13,46,76,.9) 84%, rgba(13,46,76,0));
+}
+.boye::before { content: ""; position: absolute; z-index: -1; inset: -8px; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, #0D2E4C 70%, rgba(13,46,76,0)); }
+.linjal::before { content: ""; position: absolute; z-index: -1; left: calc(-1 * var(--lw)); width: calc(var(--lw) + 12%); top: -1%; bottom: -1%; border-radius: 12px; pointer-events: none; background: rgba(13,46,76,.92); box-shadow: 0 0 10px 8px rgba(13,46,76,.92); }
+.sonefig::before {
+  content: ""; position: absolute; z-index: -1; inset: -2% -8%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(13,46,76,.86) 70%, rgba(13,46,76,0));
+}
+.bev .boye .kule { transform: scale(.2); opacity: 0; transition: transform .5s var(--fjaer) .3s, opacity .2s ease .3s; }
+.bev .boye .klokke { stroke-dashoffset: var(--p); transition: stroke-dashoffset 1.2s var(--ut) .6s; }
+.bev .boye .boyenavn { opacity: 0; transition: opacity .6s ease .75s; }
+.bev .felt.inn .boye .kule { transform: none; opacity: 1; }
+.bev .felt.inn .boye .klokke { stroke-dashoffset: 0; }
+.bev .felt.inn .boye .boyenavn { opacity: 1; }
+.bev .boye.passert .krus { animation: krus 1.3s var(--ut) both; }
+.bev .boye.passert .krus + .krus { animation-delay: .2s; }
+@keyframes krus { from { opacity: .8; transform: scale(.6); } to { opacity: 0; transform: scale(2.9); } }
 
-  .chiprad { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-  .sonechip {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 9px 15px; border-radius: 999px; font-size: .92rem; font-weight: 600;
-    background: rgba(13,46,76,.75); border: 1px solid var(--glasskant);
-  }
-  .sonechip .ok { color: var(--gronn); }
-  .fareband {
-    margin-top: 12px; padding: 13px 16px; border-radius: 16px;
-    background: rgba(255,113,91,.16); border: 1px solid rgba(255,156,140,.4);
-    font-weight: 650; font-size: .96rem;
-  }
-  .fareband small { display: block; font-weight: 400; color: var(--tekst2); margin-top: 2px; }
-  .lillaband {
-    background: rgba(194,135,232,.14); border-color: rgba(194,135,232,.4);
-  }
+.boyenavn, .etk, .mm-etk, .dom, .sonenavn, .km, .npil, .boye-merke, .kal-les, .kal-merker span, .kal-rad p, .kal-mnd span, .vaerfig figcaption { text-shadow: 0 0 3px #0D2E4C, 0 0 8px #0D2E4C, 0 0 14px #0D2E4C; }
+.figur svg { display: block; width: 100%; height: auto; overflow: visible; }
+.etk { position: absolute; font: 600 13px/1.25 var(--rund); white-space: nowrap; }
+.etk small { display: block; font: italic 400 13px/1.3 var(--serif); color: var(--tekst3); }
 
-  .trofepille {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--rav); color: #0D2E4C; font-weight: 800;
-    font-family: ui-rounded, system-ui;
-    padding: 5px 13px; border-radius: 999px; border: 1.5px solid rgba(255,255,255,.85);
-    box-shadow: 0 2px 8px rgba(0,0,0,.3);
-  }
-  .stat { margin-top: 14px; }
-  .stat-rad { display: flex; justify-content: space-between; font-size: .95rem; margin-top: 12px; }
-  .stat-rad b { font-weight: 650; }
-  .stat-rad span { color: var(--tekst2); font-variant-numeric: tabular-nums; }
-  .stat-bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.12); margin-top: 5px; }
-  .stat-bar i { display: block; height: 100%; border-radius: 3px; background: var(--rav); }
+/* --- Stopp 1: fredningssonen og brikken --- */
+.sonefig { z-index: 2; aspect-ratio: 2880 / 4420; }
+.sonefig svg { position: relative; }
+.sone-land { position: absolute; left: -17.361%; top: -11.312%; width: 134.722%; height: 122.624%; max-width: none; }
+.sonenavn { position: absolute; left: 0; bottom: calc(100% + 8px); font: italic 15px/1.2 var(--serif); color: var(--skum); white-space: nowrap; }
+.sonenavn small { display: block; font-size: 13px; line-height: 1.3; color: var(--fare); }
+.sonefig .km { position: absolute; left: 4.2%; top: 10.9%; font: italic 13px/1.2 var(--serif); color: var(--tekst2); }
+.sonefig .npil { position: absolute; right: 2%; top: 1%; width: 16px; text-align: center; font: 800 13px/1 var(--rund); color: var(--skum); }
+.sonefig .npil svg { display: block; width: 12px; height: 12px; margin: 3px auto 0; }
+.sonefig .omr { stroke-dasharray: 1 1; }
+.bev .sonefig .omr { stroke-dashoffset: 1; transition: stroke-dashoffset 1.6s var(--inn-ut) .2s; }
+.bev .sonefig.inn .omr { stroke-dashoffset: 0; }
+.bev .sonefig .omr-fyll { opacity: 0; transition: opacity .8s ease 1.4s; }
+.bev .sonefig .oyer, .bev .sonefig .sone-land { opacity: 0; transition: opacity .9s ease .6s; }
+.bev .sonefig .sonenavn { opacity: 0; transition: opacity .6s ease .9s; }
+.bev .sonefig .ms, .bev .sonefig .km, .bev .sonefig .npil { opacity: 0; transition: opacity .4s ease 1.2s; }
+.bev .sonefig.inn .omr-fyll, .bev .sonefig.inn .oyer, .bev .sonefig.inn .sone-land,
+.bev .sonefig.inn .sonenavn, .bev .sonefig.inn .ms, .bev .sonefig.inn .km, .bev .sonefig.inn .npil { opacity: 1; }
 
-  .teller { display: flex; align-items: center; justify-content: center; gap: 22px; margin-top: 6px; }
-  .teller .knapp-rund {
-    width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
-    background: var(--glass); border: 1px solid var(--glasskant);
-    font-size: 1.4rem; color: var(--tekst);
-  }
-  .teller .tall {
-    font-family: ui-rounded, system-ui; font-weight: 800; font-size: 2.6rem;
-  }
-  .teller-etikett { text-align: center; color: var(--tekst2); margin-top: 2px; font-size: .95rem; }
-  .teller-etikett .lob { display: inline-block; }
+.sonebrikke { z-index: 5; display: grid; width: auto; font: 600 13px/1.25 var(--rund); contain: layout; }
+/* Hver tilstand har sin egen pille som slutter der teksten slutter. De tones over i hverandre. */
+.sonebrikke > span {
+  grid-area: 1 / 1; justify-self: start; align-self: start; display: flex; align-items: center; gap: 8px;
+  padding: 7px 13px 7px 11px; border-radius: 18px;
+  background: #0B2741; box-shadow: 0 0 0 1px rgba(244,249,252,.2), 0 8px 20px rgba(0,0,0,.25);
+}
+/* Under 360 px brytes brikken på to linjer. Sonen flyttes ned så navnet står fritt. */
+@media (max-width: 359px) {
+  .sonebrikke { max-width: calc(100% - var(--leia) - var(--marg)); }
+  #sett .felt { --fh: 1.24 !important; }
+  #sett .sonefig { --y: 25% !important; }
+}
+.sonebrikke i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); flex: none; }
+.sonebrikke .inne i { background: var(--fare); }
+.sonebrikke .inne { opacity: 0; }
+.sonebrikke .ute, .sonebrikke .inne { transition: opacity .1s ease; }
+.sonebrikke.i-sone .ute { opacity: 0; }
+.sonebrikke.i-sone .inne { opacity: 1; transition-delay: .1s; }
+.sonebrikke:not(.i-sone) .ute { transition-delay: .1s; }
 
-  /* ---------- Hummermålet: skjermlinjalen ---------- */
-  .linjal { position: relative; height: 62px; margin-top: 22px; }
-  .linjal .skala { position: absolute; left: 0; right: 0; top: 34px; height: 2px; background: rgba(244,249,252,.3); }
-  .linjal .strek {
-    position: absolute; top: 26px; width: 1px; height: 10px;
-    background: rgba(244,249,252,.45);
-  }
-  .linjal .strek.lang { top: 22px; height: 14px; background: rgba(244,249,252,.7); }
-  .linjal .tall {
-    position: absolute; top: 42px; transform: translateX(-50%);
-    font-family: Georgia, serif; font-style: italic; font-size: .8rem; color: var(--dybdetall);
-  }
-  .linjal .maal {
-    position: absolute; left: 0; top: 31px; height: 8px; width: 75%;
-    border-radius: 4px; background: var(--gronn); transform-origin: left center;
-  }
-  .linjal .merke90 {
-    position: absolute; left: 75%; top: 0; transform: translateX(-100%); padding-right: 4px;
-    font-family: ui-rounded, system-ui; font-weight: 800; font-size: 1rem; color: var(--gronn);
-    white-space: nowrap;
-  }
-  .linjal .merke115 {
-    position: absolute; left: 100%; top: 3px; transform: translateX(-100%);
-    font-size: .78rem; color: var(--tekst3); white-space: nowrap;
-  }
-  .linjal-etikett { margin-top: 12px; color: var(--tekst2); font-size: .92rem; text-align: center; }
+/* --- Stopp 2: røkteklokka --- */
+.klokkefig { z-index: 2; }
+.klokkefig .bue { stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+.klokkefig .etk { transform: translate(-50%, -50%); text-align: center; }
+.klokkefig .avles { position: absolute; left: 50%; top: 56%; transform: translateX(-50%); display: grid; text-align: center; white-space: nowrap; }
+.avles > span { grid-area: 1 / 1; }
+.avles b { display: block; font: 800 26px/1.1 var(--rund); letter-spacing: -.01em; }
+.avles small { display: block; margin-top: 3px; font: italic 13px/1.3 var(--serif); color: var(--tekst3); }
+.avles .for b { color: var(--fare); }
+.avles .etter b { color: var(--ok); }
+.avles .etter { opacity: 0; }
+/* Under 360 px er ringen for trang til avlesningen på én linje: den rykker opp og brytes */
+@media (max-width: 359px) {
+  .klokkefig .avles { top: 49%; }
+  .avles .kl { display: block; }
+}
+.klokkefig .boye .etter-ring { opacity: 0; }
+.varsel {
+  display: grid; grid-template-columns: 20px 1fr; column-gap: 10px; align-items: start;
+  background: #0B2741; box-shadow: 0 0 0 1px rgba(244,249,252,.2); border-radius: 14px; padding: 10px 12px;
+}
+.varsel img { width: 20px; height: 20px; border-radius: 5px; margin-top: 1px; }
+.varsel b { display: block; font: 650 14px/1.35 var(--rund); color: var(--skum); }
+.varsel span { display: block; font: 400 14px/1.35 var(--sans); color: var(--tekst2); }
+/* Varselet og utfallet står sammen, så kortet aldri legger seg over knappene */
+.rokt { z-index: 3; }
+.utfall { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.utfall span { display: inline-block; padding: 8px 12px; border-radius: 10px; font: 650 14px/1.2 var(--rund); white-space: nowrap; }
+.utfall .lys { background: var(--skum); color: #0D2E4C; }
+.utfall .omriss { background: var(--hav); box-shadow: inset 0 0 0 1.5px rgba(244,249,252,.7); color: var(--skum); }
 
-  /* ---------- Kompasset ---------- */
-  .kompass {
-    position: relative; width: 156px; height: 156px; margin: 18px auto 0;
-    border-radius: 50%; border: 2px solid var(--glasskant);
-    background: radial-gradient(circle at 50% 50%, rgba(244,249,252,.08), rgba(244,249,252,0) 70%);
-  }
-  .kompass::after {
-    content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px;
-    margin: -5px 0 0 -5px; border-radius: 50%; background: var(--skum); z-index: 2;
-  }
-  .kompass .n, .kompass .s, .kompass .e, .kompass .w {
-    position: absolute; font-size: .72rem; font-weight: 700; letter-spacing: .08em; color: var(--tekst3);
-  }
-  .kompass .n { top: 8px; left: 50%; transform: translateX(-50%); }
-  .kompass .s { bottom: 8px; left: 50%; transform: translateX(-50%); }
-  .kompass .e { right: 10px; top: 50%; transform: translateY(-50%); }
-  .kompass .w { left: 10px; top: 50%; transform: translateY(-50%); }
-  .kompass .naal {
-    position: absolute; left: 50%; top: 50%; width: 8px; height: 118px;
-    margin: -59px 0 0 -4px; border-radius: 4px;
-    background: linear-gradient(var(--korall) 0 50%, rgba(244,249,252,.55) 50% 100%);
-    transform: rotate(38deg);
-  }
-  .kompass .boye-mal {
-    position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px;
-    border-radius: 50%; background: var(--korall); box-shadow: 0 0 0 4px rgba(255,156,140,.25);
-    transform: rotate(38deg) translateY(-66px);
-  }
-  .kompass-tekst { text-align: center; margin-top: 12px; }
-  .kompass-tekst .stor { font-family: ui-rounded, system-ui; font-weight: 800; font-size: 1.7rem; }
-  .kompass-tekst .liten { color: var(--tekst2); font-size: .95rem; margin-left: 8px; }
+/* Uka spilles én gang: buene fylles, varselet kommer, teina røktes og
+   klokka spoles tilbake til sju døgn. Én animasjon per del. */
+.bev .klokkefig .bue { stroke-dashoffset: 1; }
+.bev .klokkefig .etk, .bev .klokkefig .vmerker .v1, .bev .klokkefig .vmerker .v2 { opacity: 0; }
+.bev .felt .varsel, .bev .felt .utfall, .bev .klokkefig .avles .for { opacity: 0; }
+.klokkefig .vmerker g { transform-box: fill-box; transform-origin: center; }
+.bev .felt.inn .klokkefig .b1 { animation: kb1 4460ms both; }
+.bev .felt.inn .klokkefig .b2 { animation: kb2 4460ms both; }
+.bev .felt.inn .klokkefig .b3 { animation: kb3 4460ms both; }
+@keyframes kb1 { 0%, 6.726% { stroke-dashoffset: 1; animation-timing-function: cubic-bezier(.4,0,.6,1); } 33.632%, 91.48% { stroke-dashoffset: 0; animation-timing-function: linear; } 100% { stroke-dashoffset: 1; } }
+@keyframes kb2 { 0%, 33.632% { stroke-dashoffset: 1; animation-timing-function: linear; } 42.601%, 86.996% { stroke-dashoffset: 0; animation-timing-function: linear; } 91.48%, 100% { stroke-dashoffset: 1; } }
+@keyframes kb3 { 0%, 42.601% { stroke-dashoffset: 1; animation-timing-function: linear; } 48.206%, 84.305% { stroke-dashoffset: 0; animation-timing-function: linear; } 86.996%, 100% { stroke-dashoffset: 1; } }
+.bev .felt.inn .klokkefig .e45 { animation: fram 400ms ease 1500ms both; }
+.bev .felt.inn .klokkefig .e6 { animation: sprett 450ms var(--fjaer) 1900ms both; }
+.bev .felt.inn .klokkefig .v1 { animation: sprett-g 450ms var(--fjaer) 1900ms both; }
+@keyframes sprett { from { opacity: 0; transform: translate(-50%, -50%) scale(.3); } to { opacity: 1; transform: translate(-50%, -50%); } }
+@keyframes sprett-g { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: none; } }
+.bev .felt.inn .varsel { animation: kort 4110ms both; }
+@keyframes kort {
+  0%, 47.445% { opacity: 0; transform: translateY(8px); animation-timing-function: var(--ut); }
+  58.394%, 91.484% { opacity: 1; transform: none; animation-timing-function: ease; }
+  100% { opacity: 0; transform: none; }
+}
+.bev .felt.inn .klokkefig .v2, .bev .felt.inn .klokkefig .e7 { animation: fram 300ms ease 2150ms both; }
+/* Satt ut igjen: varslene for den gamle klokka er borte */
+.bev .felt.inn .klokkefig .vmerker { animation: ut 300ms ease 3760ms both; }
+.bev .felt.inn .klokkefig .avles .for { animation: les-for 4050ms both; }
+@keyframes les-for { 0%, 53.086% { opacity: 0; } 60.494%, 96.296% { opacity: 1; } 100% { opacity: 0; } }
+.bev .felt.inn .klokkefig .avles .etter, .bev .felt.inn .klokkefig .boye .etter-ring { animation: fram 250ms ease 4050ms both; }
+.bev .felt.inn .klokkefig .boye .for-ring { animation: ut 150ms ease 3900ms both; }
+/* Når kortet går ut, glir knappene opp på plassen det sto (--kh måles i maal()) */
+.bev .felt.inn .utfall { animation: fram 300ms ease 2700ms both, opp 450ms var(--ut) 4100ms both; }
+@keyframes opp { from { transform: none; } to { transform: translateY(calc(-1 * var(--kh, 0px))); } }
+.bev .felt.inn .utfall .lys { animation: trykk 260ms var(--ut) 3500ms both; }
+@keyframes trykk { 50% { transform: scale(.94); } }
 
-  /* ---------- Sjø og vær ---------- */
-  .vaer-rad { display: flex; gap: 12px; margin-top: 4px; }
-  .vaer-rad div { flex: 1; text-align: center; }
-  .vaer-rad b { display: block; font-family: ui-rounded, system-ui; font-weight: 800; font-size: 1.5rem; }
-  .vaer-rad span { color: var(--tekst2); font-size: .85rem; }
-  .bolgelinje {
-    position: relative; height: 44px; margin-top: 16px; border-radius: 12px; overflow: hidden;
-    background: rgba(13,46,76,.55);
-  }
-  .bolgelinje svg { position: absolute; left: 0; top: 0; width: 200%; height: 100%; }
-  .avdekk .bolgelinje svg { animation: driv 9s linear infinite; }
-  .vaer-kilde { margin-top: 10px; color: var(--tekst3); font-size: .82rem; text-align: center; }
+/* --- Stopp 3: kompasset --- */
+.rosefig { z-index: 2; }
+.rosefig .ring { fill: none; stroke: rgba(244,249,252,.55); stroke-width: 1; }
+.rosefig .tikk { fill: none; stroke: rgba(244,249,252,.55); }
+.rosefig .fyll { fill: rgba(244,249,252,.55); }
+.rosefig .strek { fill: none; stroke: rgba(244,249,252,.55); stroke-width: .9; stroke-linejoin: round; }
+.rosefig .lag { position: absolute; inset: 0; }
+.rosefig .nord { position: absolute; left: 50%; top: 2.5%; transform: translate(-50%, -50%); font: 800 13px/1 var(--rund); color: var(--skum); }
+.rosefig .peil { transform: rotate(221deg); }
+.rosefig .peil path { fill: var(--fare); stroke: var(--skum); stroke-width: 1.4; stroke-linejoin: round; }
+.rosefig .peilelinje { stroke: var(--fare); stroke-width: 1.3; stroke-dasharray: 4 4; fill: none; }
+.rose-etk { left: 50%; top: 113%; transform: translateX(-50%); text-align: center; font-weight: 600; }
+.rose-etk b { display: block; font: 700 22px/1.15 var(--rund); letter-spacing: -.01em; }
+.rose-etk span { display: block; font: 600 14px/1.3 var(--rund); }
+.bev .rosefig .skive { transform: rotate(-40deg); opacity: 0; transition: transform 1.6s var(--ut) .1s, opacity .8s ease .1s; }
+.bev .rosefig.inn .skive { transform: none; opacity: 1; }
+.bev .rosefig .peil { transform: rotate(21deg); transition: transform 2s cubic-bezier(.25,1.25,.4,1) .9s; }
+.bev .rosefig.inn .peil { transform: rotate(221deg); }
+.bev .rosefig .peilelinje { opacity: 0; transition: opacity .6s ease 2.2s; }
+.bev .rosefig .rose-etk { opacity: 0; transition: opacity .6s ease 2.4s; }
+.bev .rosefig.inn .peilelinje, .bev .rosefig.inn .rose-etk { opacity: 1; }
 
-  /* ---------- Bevegelse i nedstigningen ----------
-     Alt her utløses når seksjonen kommer til syne (.inn), og bare når
-     JS har satt .avdekk — uten JS eller med redusert bevegelse står alt
-     ferdig fra start. */
-  .avdekk .fristbar i { width: 0; transition: width 1.6s var(--myk) .4s; }
-  .avdekk .seksjon.inn .fristbar i { width: 96%; }
+/* --- Stopp 4: hummermålet. Alt er i skjermbildets millimeter:
+       1 mm = 0,006311 av bildets høyde, regnet fra telefonens plass i feltet. --- */
+.hummerfig { z-index: 4; pointer-events: none; }
+.felt > .hummer, .felt > .linjal { position: absolute; }
+.hummer::before { content: ""; position: absolute; z-index: -1; inset: 10% 14% 16%; border-radius: 40%; background: #0D2E4C; box-shadow: 0 0 26px 20px #0D2E4C; }
+.hummer { z-index: 2; left: calc(11.8391% - 10px - var(--lw)); top: -9.024%; width: 47.26%; }
+.linjal { z-index: 4; left: 46.4965%; top: .638%; width: 45.6532%; }
+.hummer svg, .linjal svg { display: block; width: 100%; height: auto; overflow: visible; }
+.hummer .h1 { fill: none; stroke: var(--skum); stroke-width: .62; stroke-linecap: round; stroke-linejoin: round; }
+.hummer .h2 { fill: none; stroke: rgba(244,249,252,.7); stroke-width: .5; stroke-linecap: round; stroke-linejoin: round; }
+.hummer .h3 { fill: none; stroke: rgba(244,249,252,.5); stroke-width: .45; stroke-linecap: round; }
+.hummer .h4 { fill: none; stroke: rgba(244,249,252,.55); stroke-width: .4; stroke-linecap: round; }
+.hummer path { stroke-dasharray: 1 1; }
+.linjal .lj { stroke: rgba(244,249,252,.7); fill: none; }
+.linjal .stav { fill: var(--ok); transform-box: fill-box; transform-origin: 50% 0; }
+.linjal .m90, .linjal .m115 { fill: none; stroke-width: .45; stroke-dasharray: 1 1; }
+.linjal .m90 { stroke: var(--fare); }
+.linjal .m115 { stroke: var(--gul); }
+.mm-etk { position: absolute; z-index: 4; right: calc(53.5036% + 4px); transform: translateY(-100%); margin-top: -2px; font: 600 13px/1.25 var(--rund); white-space: nowrap; text-align: right; }
+.mm-etk.e90 { top: 39.286%; color: var(--fare); }
+.mm-etk.e115 { top: 49.789%; color: var(--gul); }
+.mm-etk .lang { display: none; }
+.dom { position: absolute; z-index: 4; right: 50.3529%; top: 56.93%; text-align: right; white-space: nowrap; }
+.dom b { display: block; font: 800 26px/1.1 var(--rund); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.dom .tall { display: inline-block; width: 2ch; height: 1.1em; vertical-align: bottom; text-align: right; contain: strict; overflow: hidden; }
+.dom .dom-ord { display: block; margin-top: 2px; font: 650 15px/1.3 var(--rund); color: var(--ok); }
+.dom.under .dom-ord { color: var(--fare); }
+.felt { --lw: 30px; }
+@media (min-width: 560px) { .felt { --lw: 118px; } .mm-etk .lang { display: inline; } }
+.bev .hummer path { stroke-dashoffset: 1; transition: stroke-dashoffset 1.6s var(--inn-ut) .1s; }
+.bev .felt.inn .hummer path { stroke-dashoffset: 0; }
+.bev .linjal .lj, .bev .dom { opacity: 0; transition: opacity .4s ease .6s; }
+.bev .felt.inn .linjal .lj, .bev .felt.inn .dom { opacity: 1; }
+.bev .linjal .stav { transform: scaleY(0); transition: transform 1.3s var(--ut) 1.5s; }
+.bev .felt.inn .linjal .stav { transform: none; }
+.bev .linjal .m90, .bev .linjal .m115 { stroke-dashoffset: 1; transition: stroke-dashoffset .6s var(--inn-ut) 2.8s; }
+.bev .linjal .m115 { transition-delay: 2.95s; }
+.bev .felt.inn .linjal .m90, .bev .felt.inn .linjal .m115 { stroke-dashoffset: 0; }
+.bev .mm-etk { opacity: 0; transition: opacity .3s ease 3.1s; }
+.bev .mm-etk.e115 { transition-delay: 3.25s; }
+.bev .felt.inn .mm-etk { opacity: 1; }
 
-  .avdekk .fareband { opacity: 0; transform: translateY(10px); transition: opacity .6s ease var(--d, .9s), transform .6s var(--myk) var(--d, .9s); }
-  .avdekk .seksjon.inn .fareband { opacity: 1; transform: none; }
-  .avdekk .seksjon.inn .sonechip { animation: chipdemp .6s ease 1.7s both; }
-  @keyframes chipdemp { to { opacity: .5; } }
+/* --- Stopp 5: sanketeina og sesongkalenderen --- */
+.kal-les { z-index: 3; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
+.kal-les b { font: 800 30px/1.1 var(--rund); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.kal-les span { font: 400 16px/1.4 var(--sans); color: var(--tekst2); }
+.kal-les.reserve b { font-size: 22px; }
+.kalender { z-index: 2; }
+.kalender::before, .vaerfig::before { content: ""; position: absolute; z-index: -1; inset: -6px; border-radius: 30px; background: #0D2E4C; box-shadow: 0 0 30px 20px #0D2E4C; pointer-events: none; }
+.kal-mnd { display: grid; grid-template-columns: 31fr 30fr 31fr; font: 600 13px/1.3 var(--rund); color: var(--tekst2); }
+.kal-mnd span { padding-left: 6px; border-left: 1px solid rgba(244,249,252,.3); }
+.kal-gitter { position: relative; margin-top: 4px; }
+.kal-skille { position: absolute; top: -22px; bottom: 0; width: 1px; background: rgba(244,249,252,.16); }
+.kal-rad { position: relative; padding-top: 10px; }
+.kal-rad p { font: 400 14px/1.3 var(--sans); color: var(--skum); }
+.kal-rad svg { display: block; width: 100%; height: 8px; margin-top: 6px; overflow: visible; }
+.kal-rad rect { transform-box: fill-box; transform-origin: 0 50%; }
+.rute { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 1.5px; background: var(--skum); box-shadow: 0 0 0 2px var(--hav); transform: rotate(45deg); }
+.kal-merker { position: relative; height: 44px; }
+.kal-merker span { position: absolute; transform: translateX(-100%); padding-right: 6px; font: italic 13px/1.3 var(--serif); color: var(--tekst2); white-space: nowrap; }
+.kal-merker i { position: absolute; top: -12px; width: 0; border-left: 1px dashed rgba(244,249,252,.4); }
+.idag { position: absolute; z-index: 1; top: 0; bottom: -4px; width: 0; border-left: 1.5px dashed var(--skum); display: none; }
+/* Etikettene ligger over streken for i dag og månedsskillene, på en tett flate i havets farge,
+   så streken stopper ved bokstavene og bare går over stolpene */
+.kal-mnd span, .kal-rad p { position: relative; z-index: 2; }
+.kal-rad p { width: fit-content; margin-left: -5px; padding: 0 5px; border-radius: 4px; background: var(--hav); }
+.idag::before { content: ""; position: absolute; left: -4.75px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--skum); }
+.idag.vis { display: block; }
+.bev .kal-rad rect { transform: scaleX(0); transition: transform .9s var(--ut) calc(.2s + var(--i, 0) * .12s); }
+.bev .felt.inn .kal-rad rect { transform: none; }
+.bev .kalender .rute { transform: rotate(45deg) scale(.3); opacity: 0; transition: transform .5s var(--fjaer) 1.2s, opacity .2s ease 1.2s; }
+.bev .kalender .rute.r2 { transition-delay: 1.35s; }
+.bev .felt.inn .kalender .rute { transform: rotate(45deg); opacity: 1; }
+.bev .kalender .idag { opacity: 0; transform: translateY(-6px); transition: opacity .4s var(--ut) 1.5s, transform .4s var(--ut) 1.5s; }
+.bev .felt.inn .kalender .idag { opacity: 1; transform: none; }
+.bev .felt .kal-les { opacity: 0; transition: opacity .4s ease 1.6s; }
+.bev .felt.inn .kal-les { opacity: 1; }
+.boye .s { font-size: 11px; }
 
-  .avdekk .linjal .maal { transform: scaleX(0); transition: transform 1.5s var(--myk) .4s; }
-  .avdekk .seksjon.inn .linjal .maal { transform: scaleX(1); }
-  .avdekk .linjal .merke90 { opacity: 0; transition: opacity .5s ease 1.7s; }
-  .avdekk .seksjon.inn .linjal .merke90 { opacity: 1; }
+/* Pro */
+.pro { position: relative; padding: 80px var(--marg) 0 var(--leia); max-width: 620px; margin: 0 auto; }
+.pro-tekst { position: relative; }
+.pro-tekst::before { left: -10px; }
+.pro-merke {
+  display: inline-block; margin-left: .3em; padding: 0 .4em; vertical-align: .32em;
+  font: 700 .78rem/1.5 var(--rund); letter-spacing: .01em; color: var(--gul);
+  border: 1.5px solid rgba(244,201,120,.75); border-radius: 6px;
+}
+.pro p { margin-top: .85em; color: var(--tekst2); }
+.pro h2 + p { margin-top: 14px; }
+.pro ul { list-style: none; margin-top: 10px; }
+.pro li { position: relative; padding-left: 24px; margin-top: 8px; color: var(--tekst2); }
+.pro li::before { content: ""; position: absolute; left: 2px; top: .55em; width: 10px; height: 10px; border-radius: 50%; background: var(--gul); }
+.vaerfig { position: relative; z-index: 0; max-width: 260px; margin: 28px auto 0; }
+.vaerfig svg { display: block; width: 100%; height: auto; overflow: visible; }
+.vaerfig .stasjon { fill: none; stroke: var(--skum); stroke-width: 1.4; }
+.vaerfig .vind { fill: none; stroke: var(--skum); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+.vaerfig .bolger { position: absolute; left: 50%; top: 63%; width: 44%; height: 8.75%; overflow: hidden; }
+.vaerfig .bolgeband { width: 200%; height: 100%; }
+.vaerfig .bolgeband svg { width: 100%; height: 100%; }
+.vaerfig .bolger path { fill: none; stroke: var(--b-bla); stroke-width: 1.6; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.vaerfig .bolger path.bb2 { opacity: .55; }
+.bev .vaerfig .bolgeband { animation: bolge 7s linear infinite; }
+.vaerfig.paus .bolgeband { animation-play-state: paused; }
+@keyframes bolge { to { transform: translateX(-25%); } }
+.vaerfig .etk b { display: block; font: 700 21px/1.15 var(--rund); letter-spacing: -.01em; }
+.vaerfig figcaption { margin-top: 22px; text-align: center; font: italic 13px/1.3 var(--serif); color: var(--tekst3); }
+.bev .vaerfig .vind { stroke-dashoffset: 1; transition: stroke-dashoffset 1.1s var(--ut) .5s; }
+.bev .vaerfig.inn .vind { stroke-dashoffset: 0; }
+.bev .vaerfig .etk, .bev .vaerfig .bolger, .bev .vaerfig .stasjon { opacity: 0; transition: opacity .7s ease var(--fs, 1.2s); }
+.bev .vaerfig.inn .etk, .bev .vaerfig.inn .bolger, .bev .vaerfig.inn .stasjon { opacity: 1; }
+.bev .pro-tekst > * { opacity: 0; transform: translateY(16px); transition: opacity .8s var(--ut) .25s, transform 1s var(--ut) .25s; }
+.bev .pro-tekst > h2 { opacity: 1; transform: none; }
+.bev .pro-tekst.inn > * { opacity: 1; transform: none; }
 
-  .avdekk .seksjon.inn .kompass .naal { animation: finnteina 2.6s cubic-bezier(.3,.8,.3,1) .3s both; }
-  @keyframes finnteina {
-    0%   { transform: rotate(-160deg); }
-    55%  { transform: rotate(54deg); }
-    76%  { transform: rotate(28deg); }
-    100% { transform: rotate(38deg); }
-  }
-  .avdekk .kompass-tekst { opacity: 0; transition: opacity .6s ease 2.4s; }
-  .avdekk .seksjon.inn .kompass-tekst { opacity: 1; }
+/* Slutten og bunnteksten */
+.slutt { position: relative; z-index: 2; padding: 88px var(--marg) 0; }
+.slutt-topp { position: relative; max-width: 34rem; margin: 0 auto; text-align: center; }
+.slutt-ikon { width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 16px; box-shadow: 0 0 0 1px rgba(244,249,252,.18), 0 10px 24px rgba(0,0,0,.35); }
+.skitt { font: italic 400 clamp(2rem, 9vw, 3rem)/1.1 var(--serif); letter-spacing: -.01em; }
+.slutt .appstore { margin-top: 20px; }
+.slutt-topp p { margin-top: 18px; color: var(--tekst2); }
+.slutt-topp p a { padding: 11px 0; }
+.om { display: flex; justify-content: center; flex-wrap: wrap; gap: 0 18px; margin-top: 14px; }
+.om a { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 6px; }
+.bev .slutt-ikon { opacity: 0; transform: scale(.8); transition: opacity .5s var(--fjaer), transform .5s var(--fjaer); }
+.bev .slutt-topp.inn .slutt-ikon { opacity: 1; transform: none; }
+.kreditt {
+  position: relative; z-index: 2; max-width: 34rem; margin: 48px auto 0;
+  padding: 22px 0 max(48px, env(safe-area-inset-bottom));
+  font: 400 14px/1.6 var(--sans); color: var(--tekst3); text-align: center;
+}
+.kreditt-hus { padding: 0 var(--marg); }
+.kreditt p + p { margin-top: 10px; }
+.kreditt .versjon { margin-top: 18px; font: 400 13px/1.5 var(--mono); }
 
-  .avdekk .stat-bar i { transform: scaleX(0); transform-origin: left center; transition: transform 1.2s var(--myk) var(--d, .3s); }
-  .avdekk .seksjon.inn .stat-bar i { transform: scaleX(1); }
 
-  .avdekk .teller-etikett .lob { opacity: 0; transform: scale(.4); transition: opacity .35s ease var(--d, .4s), transform .5s cubic-bezier(.2,.9,.3,1.4) var(--d, .4s); }
-  .avdekk .seksjon.inn .teller-etikett .lob { opacity: 1; transform: none; }
+/* Bred skjerm (fra 900 px) */
+@media (min-width: 900px) {
+  .blad .b11 { display: block; }
+  .ramme-kart { display: block; position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+  .ramme-kart i {
+    position: absolute; top: 0; bottom: 0; width: var(--kant);
+    background: repeating-linear-gradient(180deg, rgba(244,249,252,.62) 0 64px, transparent 64px 128px);
+    box-shadow: inset 0 0 0 1px rgba(244,249,252,.45); transform-origin: 50% 0;
+  }
+  .ramme-kart i:nth-child(1) { left: 0; }
+  .ramme-kart i:nth-child(2) { right: 0; }
+  .ramme-kart i::after { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(244,249,252,.28); }
+  .ramme-kart i:nth-child(1)::after { left: calc(var(--kant) + 3px); }
+  .ramme-kart i:nth-child(2)::after { right: calc(var(--kant) + 3px); }
+  .bev:not(.omslag):not(.omslatt) .ramme-kart i { transform: scaleY(0); }
+  .omslag .ramme-kart i { animation: ramme-kart 1600ms var(--inn-ut) both; }
+  @keyframes ramme-kart { from { transform: scaleY(0); } }
 
-  /* Marint snø: noen få partikler som synker sakte gjennom hele vannsøylen */
-  .sno { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; display: none; }
-  .avdekk .sno { display: block; }
-  .sno i {
-    position: absolute; top: -12px; width: 3px; height: 3px; border-radius: 50%;
-    background: rgba(244,249,252,.32); left: var(--x);
-    animation: snofall var(--t, 28s) linear var(--d, 0s) infinite;
+  .helt { min-height: min(calc(var(--vhl) * 100), 1000px); padding: 0 56px; flex-direction: row; justify-content: center; }
+  .helt-indre { max-width: 1280px; display: grid; grid-template-columns: minmax(0, 34rem) minmax(0, 1fr); column-gap: 48px; align-items: center; }
+  .helt-tekst { grid-column: 1; grid-row: 1; margin: 0; text-align: left; }
+  .holder { grid-column: 2; grid-row: 1; justify-self: center; margin: 0; }
+  .stille-ikon { margin: 0 0 22px; }
+  .havn-hus { left: 48%; width: 52%; height: max(40%, 19.07vw); }
+  .havn-hus { --hh: max(40%, 19.07vw); }
+  .havn-hus {
+    -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent 100%), linear-gradient(90deg, transparent 0, #000 14%);
+    -webkit-mask-composite: source-in; mask-image: linear-gradient(180deg, #000 70%, transparent 100%), linear-gradient(90deg, transparent 0, #000 14%); mask-composite: intersect;
   }
-  .sno i.stor { width: 4px; height: 4px; background: rgba(244,249,252,.22); }
-  @keyframes snofall {
-    0%   { transform: translateY(0) translateX(0); opacity: 0; }
-    8%   { opacity: 1; }
-    100% { transform: translateY(105vh) translateX(22px); opacity: .2; }
-  }
-  main, .overflate { position: relative; z-index: 1; }
+  .havn text, .lodd-boye text { font-size: 15px; }
+  /* Overflatelinjene tones bort mot tekstkolonnen, så de ikke går som en strek over tittelen */
+  .linjer { -webkit-mask-image: linear-gradient(90deg, transparent calc(50% - var(--S) * .5 - 150px), #000 calc(50% - var(--S) * .5)); mask-image: linear-gradient(90deg, transparent calc(50% - var(--S) * .5 - 150px), #000 calc(50% - var(--S) * .5)); }
+  .havn text tspan { font-size: 10.4px; }
+  .kun-m { display: none; }
+  .kun-d { display: block; }
 
-  /* ---------- Bunnen ---------- */
-  .bunn {
-    position: relative; overflow: hidden;
-    padding: 60px 0 0;
+  .stopp {
+    display: grid; grid-template-columns: minmax(0, 430px) minmax(0, 640px); column-gap: 72px;
+    justify-content: center; align-items: center; padding: 130px 56px 40px;
   }
-  .bunn-scene {
-    position: relative; height: 300px; max-width: 760px; margin: 0 auto;
+  .stopp.v { grid-template-columns: minmax(0, 640px) minmax(0, 430px); }
+  .stopp.v .felt { order: -1; }
+  .tekst { margin: 0; padding: 0; max-width: none; }
+  .tekst::before { left: -14px; }
+  .felt { margin: 0; max-width: none; aspect-ratio: 1 / var(--dfh, var(--fh, 1)); }
+  .felt > * { left: var(--dx, var(--x)); top: var(--dy, var(--y)); width: var(--dw, var(--w)); }
+  .felt > .rp { left: var(--dx, var(--x)); top: var(--dy, var(--y)); width: 2px; }
+  .figur > .boye { left: var(--x); top: var(--y); }
+  /* Båten krysser sonen: inn i sørøst og ut i sørvest på bred skjerm, motsatt vei på mobil */
+  .figur > .rp { left: var(--fx, var(--x)); top: var(--fy, var(--y)); }
+  .felt > .boye { width: 60px; }
+  .felt > .sonebrikke { width: auto; }
+  .hummer { left: calc(25.4889% - 10px - var(--lw)); top: -8.696%; width: 38.2581%; }
+  .linjal { left: 53.5447%; top: .615%; width: 36.9573%; }
+  .mm-etk { right: calc(46.4552% + 4px); }
+  .mm-etk.e90 { top: 37.861%; }
+  .mm-etk.e115 { top: 47.982%; }
+  .dom { right: 43.9047%; top: 54.865%; }
+  .pro {
+    max-width: 1142px; padding: 150px 56px 0; display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 340px);
+    column-gap: 96px; justify-content: center; align-items: center;
   }
-  /* Det siste lyset som når ned: én svak kjegle over teina */
-  .bunnlys {
-    position: absolute; left: 50%; top: -140px; width: 320px; height: 360px; margin-left: -160px;
-    background: radial-gradient(ellipse at 50% 0%, rgba(247,217,160,.11), rgba(247,217,160,0) 68%);
-    animation: pust 11s ease-in-out infinite alternate;
-  }
-  @keyframes pust { from { opacity: .6; } to { opacity: 1; } }
-  .bunn-scene .tau-ned {
-    position: absolute; left: 50%; top: -60px; width: 2px; height: 128px;
-    background: rgba(244,249,252,.4);
-  }
-  .bunn-scene svg.teine-stor {
-    position: absolute; left: 50%; top: 62px; margin-left: -130px;
-    width: 260px; height: 140px; overflow: visible; z-index: 2;
-  }
-  .hummer {
-    position: absolute; z-index: 1; font-size: 40px;
-    left: 50%; top: 138px; margin-left: 10px;
-    transform: translateX(56vw) rotate(-70deg);
-  }
-  .avdekk .bunn.inn .hummer {
-    animation: hummerinn 2.6s cubic-bezier(.35,0,.25,1) .3s forwards;
-  }
-  @keyframes hummerinn {
-    0% { transform: translateX(56vw) rotate(-70deg); }
-    80% { transform: translateX(2px) rotate(-70deg); }
-    100% { transform: translateX(0) rotate(0deg); }
-  }
-  html:not(.avdekk) .hummer { transform: none; }
-  .tang {
-    position: absolute; bottom: 0; width: 26px; height: 88px;
-    transform-origin: bottom center;
-    animation: vaie 6s ease-in-out infinite;
-  }
-  @keyframes vaie { 0%,100% { transform: rotate(-4deg);} 50% { transform: rotate(4deg);} }
-  .tang svg { width: 100%; height: 100%; }
-  .bunnlinje {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 46px;
-    background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.35));
-  }
-  .bunn-boble { position: absolute; border-radius: 50%; background: rgba(244,249,252,.3); }
-  .bb-1 { width: 5px; height: 5px; left: 46%; bottom: 120px; animation: stigbunn 6s linear 1s infinite; }
-  .bb-2 { width: 4px; height: 4px; left: 55%; bottom: 100px; animation: stigbunn 7s linear 3s infinite; }
-  @keyframes stigbunn {
-    0% { opacity: 0; transform: translateY(0); }
-    15% { opacity: .7; }
-    100% { opacity: 0; transform: translateY(-190px) translateX(10px); }
-  }
+  .vaerfig { margin: 0; max-width: 340px; }
+  .bev .tlf { will-change: transform; }
+  .slutt { padding-top: 150px; }
+}
 
-  .bunn-tekst { text-align: center; max-width: 560px; margin: 26px auto 0; padding: 0 24px; }
-  .bunn-tekst h2 { font-size: clamp(1.5rem, 4.5vw, 1.9rem); }
-  .bunn-tekst p { color: var(--tekst2); line-height: 1.7; margin-top: 10px; }
-  .skittfiske {
-    font-family: ui-rounded, system-ui; font-weight: 800; font-size: 1.2rem;
-    margin-top: 18px;
-  }
-  .hent {
-    display: inline-block; margin-top: 22px; line-height: 0; border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.3);
-  }
-  .hent img { display: block; width: 180px; height: auto; }
-
-  .kort-rad {
-    display: grid; gap: 16px; max-width: 680px;
-    margin: 44px auto 0; padding: 0 24px;
-  }
-  @media (min-width: 600px) { .kort-rad { grid-template-columns: 1fr 1fr 1fr; } }
-  .kort {
-    padding: 22px; border-radius: 20px;
-    background: var(--glass); border: 1px solid var(--glasskant);
-  }
-  .kort h3 { font-size: 1.02rem; margin-bottom: 6px; }
-  .kort p { color: var(--tekst2); font-size: .92rem; line-height: 1.6; }
-  .kort a.knapp {
-    display: inline-block; margin-top: 12px; padding: 9px 16px;
-    border-radius: 999px; background: var(--korall); color: #0D2E4C;
-    font-weight: 650; text-decoration: none; font-size: .92rem;
-  }
-  .kort a.knapp:focus-visible, a:focus-visible {
-    outline: 2px solid var(--skum); outline-offset: 3px;
-  }
-
-  .attribusjon {
-    max-width: 640px; margin: 40px auto 0; padding: 0 24px;
-    text-align: center; font-size: .86rem; color: var(--tekst3); line-height: 1.7;
-  }
-  footer {
-    text-align: center; padding: 30px 24px 42px; font-size: .85rem;
-    color: var(--tekst3); line-height: 1.8;
-  }
-  footer a { color: inherit; }
-
-  /* Ro: alt står stille, alt er synlig */
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation: none !important; transition: none !important; }
-    .hummer { transform: none !important; }
-    .avdekk .seksjon-innhold, .avdekk .telefon-side { opacity: 1 !important; transform: none !important; }
-    .stim, .dybdemaaler { display: none !important; }
-  }
+/* Ro: alt står ferdig og stille */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+}
 </style>
 </head>
 <body>
+<a class="hopp" href="#innhold">Hopp til innholdet</a>
 
-<!-- ============ OVERFLATEN: appens intro, gjenskapt ============ -->
-<header class="overflate">
-  <div class="scene" aria-hidden="true">
-    <div class="himmel"></div>
-    <div class="solglod"></div>
-    <div class="sol"></div>
-    <div class="solstripe"></div>
-    <div class="vannlinje vl-1">
-      <svg viewBox="0 0 1600 26" preserveAspectRatio="none">
-        <path d="M0,13 C100,5 200,21 400,13 C600,5 700,21 800,13 C900,5 1000,21 1200,13 C1400,5 1500,21 1600,13"
-              fill="none" stroke="rgba(244,249,252,.55)" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div class="vannlinje vl-2">
-      <svg viewBox="0 0 1600 26" preserveAspectRatio="none">
-        <path d="M0,13 C120,7 240,19 400,13 C560,7 680,19 800,13 C920,7 1040,19 1200,13 C1360,7 1480,19 1600,13"
-              fill="none" stroke="rgba(244,249,252,.4)" stroke-width="1.6" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div class="undervann"></div>
-    <div class="lys">
-      <i class="straale" style="--x:60%; --b:150px; --a:.11; --t:11s; --d:-2s"></i>
-      <i class="straale" style="--x:71%; --b:80px;  --a:.15; --t:9s;  --d:-5s"></i>
-      <i class="straale" style="--x:80%; --b:220px; --a:.09; --t:14s; --d:-8s"></i>
-    </div>
-    <div class="plask"></div>
-    <div class="plask plask-2"></div>
-
-    <div class="riggklipp">
-    <div class="rigg">
-      <div class="tau"></div>
-      <!-- Hanefot + teine — samme profil som i appen: flat bunn,
-           buet topp, masker og kalv -->
-      <svg viewBox="0 0 220 116" fill="none">
-        <path d="M110,0 L64,26 M110,0 L156,26" stroke="rgba(244,249,252,.5)" stroke-width="2"/>
-        <g transform="translate(0,28)">
-          <defs>
-            <clipPath id="profil">
-              <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"/>
-            </clipPath>
-          </defs>
-          <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"
-                fill="rgba(244,249,252,.08)"/>
-          <g clip-path="url(#profil)" stroke="rgba(244,249,252,.3)" stroke-width="1.2">
-            <path d="M27.5,0 V84 M55,0 V84 M82.5,0 V84 M110,0 V84 M137.5,0 V84 M165,0 V84 M192.5,0 V84"/>
-            <path d="M0,25.2 H220 M0,46.2 H220 M0,67.2 H220"/>
-          </g>
-          <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"
-                stroke="rgba(244,249,252,.9)" stroke-width="3"/>
-          <circle cx="134" cy="50" r="15" stroke="rgba(244,249,252,.9)" stroke-width="3"/>
-          <circle cx="134" cy="50" r="8.5" stroke="rgba(244,249,252,.5)" stroke-width="2"/>
-        </g>
-      </svg>
-    </div>
-    </div>
-    <div class="boble boble-1"></div>
-    <div class="boble boble-2"></div>
-    <div class="boble boble-3"></div>
-    <div class="boye"></div>
-  </div>
-
-  <div class="hero-innhold">
-    <div class="hero-tekst">
-      <p class="overlinje">Nå i App Store · for iPhone</p>
-      <h1 aria-label="Hummerfiske"><span style="--i:0">H</span><span style="--i:1">u</span><span style="--i:2">m</span><span style="--i:3">m</span><span style="--i:4">e</span><span style="--i:5">r</span><span style="--i:6">f</span><span style="--i:7">i</span><span style="--i:8">s</span><span style="--i:9">k</span><span style="--i:10">e</span></h1>
-      <p class="tagline">Glem aldri hvor teinene står</p>
-      <a class="appstore" href="https://apps.apple.com/no/app/hummerfiske/id6802721661?l=nb">
-        <img src="/hummerfiske/appstore-merke.svg" alt="Last ned fra App Store" width="180" height="60">
-      </a>
-    </div>
-    <figure class="hero-telefon">
-      <div class="telefon-3d">
-        <div class="telefon telefon-flyt">
-          <img src="/hummerfiske/skjermer/02-settkort.jpg" width="720" height="1564"
-               alt="Appen på en iPhone: sjøkartet fra Kartverket med båten, to teiner og kortet «Sett teine her?» som viser at punktet er utenfor fredningssone, 4 meter dypt og 260 meter fra båten">
-        </div>
-      </div>
-    </figure>
-  </div>
-  <p class="scroll-hint">Bli med ned<span class="pil" aria-hidden="true">⌄</span></p>
-</header>
-
-<!-- Dybdemåleren: bøya synker langs tauet i takt med scrollen -->
-<div class="dybdemaaler" aria-hidden="true">
-  <span class="dm-tall">0 m</span>
-  <span class="dm-linje"><i class="dm-markor"></i></span>
+<!-- Sjøkartet: ferdige blad laget av Tools/hummerfiske-kart.mjs, stablet uten skjøt -->
+<div class="kart" aria-hidden="true">
+<div class="blad">
+  <picture><source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-01.svg" width="1440" height="1000"><source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-01.svg" width="720" height="1000"><img src="/hummerfiske/bilder/kart/smal-01.svg" width="400" height="1000" alt="" decoding="async"></picture>
+  <picture><source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-02.svg" width="1440" height="1000"><source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-02.svg" width="720" height="1000"><img src="/hummerfiske/bilder/kart/smal-02.svg" width="400" height="1000" alt="" decoding="async"></picture>
+  <picture><source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-03.svg" width="1440" height="1000"><source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-03.svg" width="720" height="1000"><img src="/hummerfiske/bilder/kart/smal-03.svg" width="400" height="1000" alt="" decoding="async" loading="lazy"></picture>
+  <picture><source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-04.svg" width="1440" height="1000"><source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-04.svg" width="720" height="1000"><img src="/hummerfiske/bilder/kart/smal-04.svg" width="400" height="1000" alt="" decoding="async" loading="lazy"></picture>
+  <picture><source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-05.svg" width="1440" height="1000"><source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-05.svg" width="720" height="1000"><img src="/hummerfiske/bilder/kart/smal-05.svg" width="400" height="1000" alt="" decoding="async" loading="lazy"></picture>
+  <picture><source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-06.svg" width="1440" height="1000"><source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-06.svg" width="720" height="1000"><img src="/hummerfiske/bilder/kart/smal-06.svg" width="400" height="1000" alt="" decoding="async" loading="lazy"></picture>
+  <picture><source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-07.svg" width="1440" height="1000"><source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-07.svg" width="720" height="1000"><img src="/hummerfiske/bilder/kart/smal-07.svg" width="400" height="1000" alt="" decoding="async" loading="lazy"></picture>
+  <picture><source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-08.svg" width="1440" height="1000"><source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-08.svg" width="720" height="1000"><img src="/hummerfiske/bilder/kart/smal-08.svg" width="400" height="1000" alt="" decoding="async" loading="lazy"></picture>
+  <picture><source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-09.svg" width="1440" height="1000"><source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-09.svg" width="720" height="1000"><img src="/hummerfiske/bilder/kart/smal-09.svg" width="400" height="1000" alt="" decoding="async" loading="lazy"></picture>
+  <picture><source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-10.svg" width="1440" height="1000"><source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-10.svg" width="720" height="1000"><img src="/hummerfiske/bilder/kart/smal-10.svg" width="400" height="1000" alt="" decoding="async" loading="lazy"></picture>
+  <img class="b11" src="/hummerfiske/bilder/kart/bred-11.svg" width="1440" height="1000" alt="" decoding="async" loading="lazy">
+</div>
+<div class="kjol"></div>
+</div>
+<div class="ramme-kart" aria-hidden="true"><i></i><i></i></div>
+<div class="baat ligger" aria-hidden="true">
+<div class="baat-inn">
+  <i class="ring"></i><i class="ring ring2"></i>
+  <svg viewBox="-16 -24 32 60">
+    <path class="v" d="M-4 13L-15 34M4 13L15 34"/>
+    <path class="skrog" d="M0 -17C5 -11 7.2 -3 7.2 5C7.2 10 6.4 13 5.4 14.5L-5.4 14.5C-6.4 13 -7.2 10 -7.2 5C-7.2 -3 -5 -11 0 -17Z"/>
+    <path class="detalj" d="M-6.6 3H6.6M-5 -6.5H5"/>
+    <rect class="motor" x="-2.2" y="14.5" width="4.4" height="5" rx="1.2"/>
+  </svg>
+</div>
 </div>
 
-<main>
-  <div class="sno" aria-hidden="true">
-    <i style="--x:8%;  --t:31s; --d:-4s"></i>
-    <i style="--x:19%; --t:26s; --d:-17s" class="stor"></i>
-    <i style="--x:31%; --t:34s; --d:-9s"></i>
-    <i style="--x:44%; --t:24s; --d:-21s"></i>
-    <i style="--x:57%; --t:29s; --d:-2s" class="stor"></i>
-    <i style="--x:68%; --t:36s; --d:-13s"></i>
-    <i style="--x:79%; --t:27s; --d:-25s"></i>
-    <i style="--x:91%; --t:32s; --d:-7s" class="stor"></i>
+<header class="helt" id="topp">
+<div class="vann" aria-hidden="true"></div>
+<div class="havn-hus" aria-hidden="true">
+<img class="havn havn-grunn" src="/hummerfiske/bilder/kart/havn-grunn.svg" width="1200" height="440" alt="" decoding="async">
+<svg class="havn havn-strek" viewBox="0 0 1200 440" preserveAspectRatio="xMaxYMax slice" aria-hidden="true" focusable="false" data-start="938 296">
+
+
+<use class="land-fyll" fill="#2B4D69" fill-rule="evenodd" href="#havn-sti2"/>
+<use class="skravur" fill="url(#havn-skravur)" fill-rule="evenodd" href="#havn-sti2"/>
+<path class="kyst" pathLength="1" fill="none" stroke="rgba(244,249,252,.8)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" d="M733.4 439.3q1.4-1.3 3-2.7t3.7-3t3-2.5t2.7-3t3-3.3t3.5-3t6-4.1t6.7-2.7t6-.4t6-.2t6 1.1t6 1.3t6-.9t5.6-1.4t6-.9t6.4-.6t6-.2t6-.8t6-2t6-1.5t5-.4t6-.9t7-1.2t6-1.5t6-1.5t5.1-.7t6-1.3t6.9-1.4t6-.9t6-1t6-.5t6 0t6 0t6 .1t6 .5t6 .2t6-.7t5-.9t6-1t7-1.1t6-.5t6-.6t6-1.8t6-1.8t6-.7t6-.2t6-.4t6-1.3t6-1.8t6-2.3t5.5-3.2t4.8-4.7t3.5-4.8t2.3-3t3-3.2t4.2-3t4.6-4t3.4-6t3.7-6t6.3-5.3t4.4-3t3-3.2t4.1-6t3-5.5t1.9-3t2.6-4t1.9-6t-1-6t-2.4-6t-3.1-6t-3.2-5t-2.4-3t-3-2.9t-3.1-3t-3-3.1t-2.9-3t-3-2.5t-4.2-3t-3-2.3t-3.9-2.6t-6-3.3t-6-2.8t-4.5-1.9t-3-1.3t-4.5-2.1t-4.7-2.3t-3-1.9t-4.3-2.4t-4-2t-3-2.6t-3.1-3t-3-3.6t-3.3-3t-3-.8t-4.6-1.8t-4-2.6t-1.3-4.2t1-4.9t2.1-3t3-3.1t3.3-3t2.8-4t1.3-6t-1-6t-1-6t-1.5-6t-2.9-6t-.6-6t4.5-3.8t6.3-2.2t3.8-2.2t3-2.3t3.9-3t3-2.7t3.7-3t6-4.3t6.6-4.2t6-2.8t4.6-1.8t3-1.3t4.4-1.9t5-2.4t3-1.6t4-2.2t4.2-2.5t3-1.8t4.8-2.1t6-1.5t4.8-.9t3-.9t4.2-.7t6-1t6-1.3t6-1.2t4.6-1t3-.7t4.4-.7t6-1.6t6-1.7t6-.7t5.8-.6t6-1.4t6.2-2.1t6-1.6t5-.9t6-1.2t7-1.6t6-1.5t6-1.4t3.1-.7t3-.4t5.9-1.3M806.2 275.7q3.8-.3 6.8-.8t6-.4t6 .3t6 .4t6 2.3t6 3.3t6 2.8t4.3 3t.6 4.4t-1.3 5.6t-1.6 6t-3 5.4t-2.8 3t-3 3.9t-5.2 3.5t-6 1.9t-6 1.4t-5.8 1.2t-6 .4t-6.2-.2t-6 1.9t-6 .3t-6-1.7t-6-.9t-6-1.2t-6-1.4t-6-.8t-4.1-.8t-3-2.1t-2.9-3t-1.4-4.4t-.2-6t1.4-6t4.2-4.6t6-1.9t4.5-1.4t3-2.2t3.4-3t3-3.4t4.1-2t6 .3t6-.1t5.2-1.8t6-1.2z"/>
+<g class="brygge"><path d="M1080 280H972V292H1080Z" fill="#2B4D69" stroke="rgba(244,249,252,.8)" stroke-width="2.4" stroke-linejoin="round"/><path d="M984 280V292M1008 280V292M1032 280V292M1056 280V292" fill="none" stroke="rgba(244,249,252,.5)" stroke-width="2"/><path d="M970 286C960 286 952 288 946 290" fill="none" stroke="rgba(244,249,252,.6)" stroke-width="2" stroke-dasharray="4 4"/></g>
+<g class="lodd" font-family="'Iowan Old Style', Georgia, serif" font-style="italic" font-size="23" fill="rgba(168,208,236,.66)" text-anchor="middle"><text x="336.3" y="157.4">43</text><text x="413.7" y="151.1">40</text><text x="485.1" y="157.8">34</text><text x="604.4" y="173.9">24</text><text x="672.7" y="153.9">22</text><text x="788.4" y="170.2">13</text><text x="870.6" y="159.8">10<tspan dy="5" font-size="16">5</tspan></text><text x="340.2" y="268.3">39</text><text x="436.6" y="246.7">32</text><text x="538.1" y="207.2">29</text><text x="603.2" y="248.5">22</text><text x="685.6" y="260">15</text><text x="767.8" y="234.6">11<tspan dy="5" font-size="16">7</tspan></text><text x="887.5" y="255.6">4<tspan dy="5" font-size="16">2</tspan></text><text x="310.2" y="298.4">44</text><text x="432" y="323.6">38</text><text x="494.5" y="305.4">33</text><text x="632.9" y="302.6">21</text><text x="721.7" y="351.4">13</text><text x="866.9" y="321.8">3<tspan dy="5" font-size="16">4</tspan></text><text x="329.4" y="424.5">34</text><text x="577.9" y="395.7">17</text><text x="701.7" y="426.2">5<tspan dy="5" font-size="16">1</tspan></text><text x="785.7" y="413.5">2<tspan dy="5" font-size="16">3</tspan></text></g>
+</svg>
+  <i class="rp start" data-rute="start"></i>
+</div>
+<div class="helt-indre">
+  <div class="holder" aria-hidden="true">
+    <div class="ramme"></div>
+    <div class="verden">
+<div class="lag linjer"><svg viewBox="-250 12 600 10" preserveAspectRatio="none">
+      <path pathLength="1" stroke-width="1.47" stroke-opacity=".32" d="M50 15.4c2.1-.1 4.2-.3 6.2-.4c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1.1 4.2.3 6.3.4c2.1.2 4.2.3 6.2.4c2.1.1 4.2.2 6.3.3c2.1 0 4.2 0 6.2 0c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1 0 4.2 0 6.3 0c2.1-.1 4.2-.2 6.2-.3c2.1-.1 4.2-.2 6.3-.4c2.1-.1 4.2-.3 6.2-.4c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1.1 4.2.3 6.3.4c2.1.2 4.2.4 6.2.5c2.1.1 4.2.2 6.3.2c2.1 0 4.2-.1 6.2-.2c2.1-.1 4.2-.3 6.3-.4c2.1-.2 4.2-.3 6.2-.4c2.1-.1 4.2-.3 6.3-.3c2.1 0 4.2-.1 6.2 0c2.1 0 4.2.3 6.3.3c2.1 0 4.2-.3 6.2-.3c2.1-.1 4.2 0 6.3 0c2.1 0 4.2.2 6.2.3c2.1.1 4.2.2 6.3.4c2.1.1 4.2.3 6.2.4c2.1.1 4.2.2 6.3.2c2.1 0 4.2-.1 6.2-.2c2.1-.1 4.2-.3 6.3-.5c2.1-.1 4.2-.3 6.2-.4c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1.1 4.2.3 6.3.4c2.1.2 4.2.3 6.2.4c2.1.1 4.2.2 6.3.3c2.1 0 4.2 0 6.2 0c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1 0 4.2 0 6.3 0c2.1-.1 4.2-.2 6.2-.3c2.1-.1 4.2-.2 6.3-.4c2.1-.1 4.2-.3 6.2-.4c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1.1 4.2.3 6.3.4c2.1.2 4.2.4 6.2.5c2.1.1 5.3.1 6.3.2"/>
+      <path pathLength="1" stroke-width="1.47" stroke-opacity=".32" d="M50 15.4c-2.1.2-4.2.4-6.2.5c-2.1.1-4.2.2-6.3.2c-2.1 0-4.2-.1-6.2-.2c-2.1-.1-4.2-.3-6.3-.4c-2.1-.2-4.2-.3-6.2-.4c-2.1-.1-4.2-.2-6.3-.3c-2.1 0-4.2-.1-6.2 0c-2.1 0-4.2.3-6.3.3c-2.1 0-4.2-.3-6.2-.3c-2.1 0-4.2 0-6.3 0c-2.1 0-4.2.2-6.2.3c-2.1.1-4.2.2-6.3.4c-2.1.1-4.2.3-6.2.4c-2.1.1-4.2.2-6.3.2c-2.1 0-4.2-.1-6.2-.2c-2.1-.1-4.2-.3-6.3-.5c-2.1-.1-4.2-.3-6.2-.4c-2.1-.1-4.2-.2-6.3-.2c-2.1 0-4.2.1-6.2.2c-2.1.1-4.2.3-6.3.4c-2.1.2-4.2.3-6.2.4c-2.1.1-4.2.2-6.3.3c-2.1 0-4.2 0-6.2 0c-2.1-.1-4.2-.2-6.3-.2c-2.1 0-4.2.1-6.2.2c-2.1 0-4.2 0-6.3 0c-2.1-.1-4.2-.2-6.2-.3c-2.1-.1-4.2-.2-6.3-.4c-2.1-.1-4.2-.3-6.2-.4c-2.1-.1-4.2-.2-6.3-.2c-2.1 0-4.2.1-6.2.2c-2.1.1-4.2.3-6.3.4c-2.1.2-4.2.4-6.2.5c-2.1.1-4.2.2-6.3.2c-2.1 0-4.2-.1-6.2-.2c-2.1-.1-4.2-.3-6.3-.4c-2.1-.2-4.2-.3-6.2-.4c-2.1-.1-4.2-.2-6.3-.3c-2.1 0-4.2-.1-6.2 0c-2.1 0-4.2.3-6.3.3c-2.1 0-4.2-.3-6.2-.3c-2.1 0-4.2 0-6.3 0c-2.1 0-4.2.2-6.2.3c-2.1.1-4.2.2-6.3.4c-2.1.1-4.2.3-6.2.4c-2.1.1-4.2.2-6.3.2c-2.1 0-4.2-.1-6.2-.2c-2.1-.1-4.2-.3-6.3-.5c-2.1-.1-4.2-.3-6.2-.4c-2.1-.1-5.3-.2-6.3-.2"/>
+      <path pathLength="1" stroke-width=".97" stroke-opacity=".16" d="M50 18.4c2.1-.1 4.2-.3 6.2-.3c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1.1 4.2.2 6.3.3c2.1.1 4.2.3 6.2.4c2.1.1 4.2.1 6.3.2c2.1 0 4.2 0 6.2 0c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1 0 4.2 0 6.3 0c2.1-.1 4.2-.1 6.2-.2c2.1-.1 4.2-.3 6.3-.4c2.1-.1 4.2-.2 6.2-.3c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1 0 4.2.2 6.3.3c2.1.2 4.2.3 6.2.4c2.1.1 4.2.2 6.3.2c2.1 0 4.2-.1 6.2-.2c2.1-.1 4.2-.2 6.3-.3c2.1-.1 4.2-.3 6.2-.4c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2 0 6.2 0c2.1 0 4.2.2 6.3.2c2.1 0 4.2-.2 6.2-.2c2.1 0 4.2 0 6.3 0c2.1 0 4.2.1 6.2.2c2.1.1 4.2.3 6.3.4c2.1.1 4.2.2 6.2.3c2.1.1 4.2.2 6.3.2c2.1 0 4.2-.1 6.2-.2c2.1-.1 4.2-.2 6.3-.4c2.1-.1 4.2-.3 6.2-.3c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1.1 4.2.2 6.3.3c2.1.1 4.2.3 6.2.4c2.1.1 4.2.1 6.3.2c2.1 0 4.2 0 6.2 0c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1 0 4.2 0 6.3 0c2.1-.1 4.2-.1 6.2-.2c2.1-.1 4.2-.3 6.3-.4c2.1-.1 4.2-.2 6.2-.3c2.1-.1 4.2-.2 6.3-.2c2.1 0 4.2.1 6.2.2c2.1 0 4.2.2 6.3.3c2.1.2 4.2.3 6.2.4c2.1.1 5.3.1 6.3.2"/>
+      <path pathLength="1" stroke-width=".97" stroke-opacity=".16" d="M50 18.4c-2.1.2-4.2.3-6.2.4c-2.1.1-4.2.2-6.3.2c-2.1 0-4.2-.1-6.2-.2c-2.1-.1-4.2-.2-6.3-.3c-2.1-.1-4.2-.3-6.2-.4c-2.1-.1-4.2-.2-6.3-.2c-2.1 0-4.2 0-6.2 0c-2.1 0-4.2.2-6.3.2c-2.1 0-4.2-.2-6.2-.2c-2.1 0-4.2 0-6.3 0c-2.1 0-4.2.1-6.2.2c-2.1.1-4.2.3-6.3.4c-2.1.1-4.2.2-6.2.3c-2.1.1-4.2.2-6.3.2c-2.1 0-4.2-.1-6.2-.2c-2.1-.1-4.2-.2-6.3-.4c-2.1-.1-4.2-.3-6.2-.3c-2.1-.1-4.2-.2-6.3-.2c-2.1 0-4.2.1-6.2.2c-2.1.1-4.2.2-6.3.3c-2.1.1-4.2.3-6.2.4c-2.1.1-4.2.1-6.3.2c-2.1 0-4.2 0-6.2 0c-2.1-.1-4.2-.2-6.3-.2c-2.1 0-4.2.1-6.2.2c-2.1 0-4.2 0-6.3 0c-2.1-.1-4.2-.1-6.2-.2c-2.1-.1-4.2-.3-6.3-.4c-2.1-.1-4.2-.2-6.2-.3c-2.1-.1-4.2-.2-6.3-.2c-2.1 0-4.2.1-6.2.2c-2.1 0-4.2.2-6.3.3c-2.1.2-4.2.3-6.2.4c-2.1.1-4.2.2-6.3.2c-2.1 0-4.2-.1-6.2-.2c-2.1-.1-4.2-.2-6.3-.3c-2.1-.1-4.2-.3-6.2-.4c-2.1-.1-4.2-.2-6.3-.2c-2.1 0-4.2 0-6.2 0c-2.1 0-4.2.2-6.3.2c-2.1 0-4.2-.2-6.2-.2c-2.1 0-4.2 0-6.3 0c-2.1 0-4.2.1-6.2.2c-2.1.1-4.2.3-6.3.4c-2.1.1-4.2.2-6.2.3c-2.1.1-4.2.2-6.3.2c-2.1 0-4.2-.1-6.2-.2c-2.1-.1-4.2-.2-6.3-.4c-2.1-.1-4.2-.3-6.2-.3c-2.1-.1-5.3-.2-6.3-.2"/>
+    </svg></div>
+<div class="lag ikontau"></div>
+    <div class="lag teine"><svg viewBox="15 42 70 38">
+      <g class="h-maske" stroke="#fff" stroke-opacity=".3" stroke-width="1.2" fill="none"><path d="M30,56.4 V76 M40,53.1 V76 M50,52 V76 M60,53.1 V76 M70,56.4 V76 M20,64.5 H80"/></g>
+      <path class="h-hane" d="M40.4,52.86 L50,43.36 L59.6,52.86" stroke="#fff" stroke-opacity=".61" stroke-width="1.42" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path class="h-ytre" pathLength="1" d="M50,52 C53.41,52 77.82,55.45 80,63.95 L80,76 L50,76" fill="none" stroke="#F0F4F6" stroke-width="3.44" stroke-linejoin="round" stroke-linecap="round"/>
+      <path class="h-ytre" pathLength="1" d="M50,52 C46.59,52 22.18,55.45 20,63.95 L20,76 L50,76" fill="none" stroke="#F0F4F6" stroke-width="3.44" stroke-linejoin="round" stroke-linecap="round"/>
+      <g class="h-kalv"><circle cx="58.4" cy="64.45" r="7.2" fill="#174367" stroke="#F0F4F6" stroke-width="2.15"/>
+      <circle cx="58.4" cy="64.45" r="3.95" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.27"/></g>
+    </svg></div>
+    <div class="lag boble b1"></div>
+    <div class="lag boble b2"></div>
+    <div class="lag boble b3"></div>
+    <div class="lag ikonboye"><div><svg viewBox="42.5 8.76 15 15"><circle cx="50" cy="16.26" r="7.08" fill="#F2F6F8"/><circle cx="50" cy="16.26" r="5.3" fill="#C84F40"/></svg></div></div>
+    </div>
+    <svg class="lodd-boye"><text x="10%" y="12%">33</text><text class="n" x="34%" y="38%">27</text><text class="n" x="58%" y="38%">21</text><text class="n" x="89%" y="19%">19</text><text x="17%" y="61%">31</text><text class="n" x="48%" y="50%">24</text><text x="79%" y="66%">17</text><text x="6%" y="90%">34</text><text x="37%" y="78%">28</text><text x="63%" y="94%">22</text><text x="93%" y="84%">15</text></svg>
+    <div class="ping"><svg viewBox="0 0 640 640"><g><circle cx="320" cy="320" r="318"/></g><g><circle cx="320" cy="320" r="318"/></g></svg></div>
+    <svg class="klokke-ring" viewBox="-20 -20 40 40"><circle class="kr-bunn" r="15" pathLength="1" transform="rotate(-90)"/><path class="kr-start" d="M0 -15A15 15 0 0 1 1.05 -14.96"/></svg>
+    <p class="boye-merke"><span id="bm1">satt nå</span><small id="bm2">7 d</small></p>
+    <img class="dor" src="/hummerfiske/bilder/ikon-1024.jpg" width="1024" height="1024" alt="" decoding="async" fetchpriority="high">
   </div>
-
-  <!-- Stimen: seks små fisk som krysser vannsøylen rundt 10 meter -->
-  <div class="stim" aria-hidden="true">
-    <svg viewBox="0 0 150 46" fill="rgba(244,249,252,.9)">
-      <path transform="translate(0,14)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
-      <path transform="translate(30,4) scale(.85)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
-      <path transform="translate(34,26) scale(.9)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
-      <path transform="translate(64,12) scale(1.05)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
-      <path transform="translate(96,2) scale(.8)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
-      <path transform="translate(100,28) scale(.75)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
-      <path transform="translate(126,16) scale(.9)" d="M0,6 C5,0 13,0 18,6 C13,12 5,12 0,6 Z M17,6 L24,1 L24,11 Z"/>
-    </svg>
+  <div class="helt-tekst">
+    <img class="stille-ikon" src="/hummerfiske/bilder/ikon-160.png" width="76" height="76" alt="" loading="lazy">
+    <h1 class="t1">Hummerfiske</h1>
+    <p class="slagord t2">Glem aldri hvor teinene står.</p>
+    <a class="appstore t3" href="https://apps.apple.com/no/app/hummerfiske/id6802721661?l=nb"><img src="/hummerfiske/appstore-merke.svg" width="168" height="56" alt="Last ned Hummerfiske i App Store"></a>
+    <p class="naa t4" id="naa">Hver teine får en frist sju døgn etter at den er satt.</p>
+    <p class="id t5">iPhone&nbsp;· iOS&nbsp;17&nbsp;eller&nbsp;nyere&nbsp;· ingen&nbsp;konto</p>
   </div>
+</div>
+</header>
 
-  <!-- ============ 5 m — Røkteklokka ============ -->
-  <div class="taumerke" aria-hidden="true"><span class="dybde">5 m</span></div>
+<main id="innhold">
 
-  <section class="seksjon med-telefon">
-    <span class="karttall" style="top:-10px; left:6%;" aria-hidden="true">7<sub>2</sub></span>
-    <span class="karttall" style="top:120px; right:5%;" aria-hidden="true">12</span>
-    <div class="seksjon-innhold">
-      <span class="merke">Røkteklokka</span>
-      <h2>Loven teller døgn.<br>Appen teller for deg.</h2>
-      <p class="brod">Hummerteiner skal røktes minst én gang i uka. I det du
-      setter teina — ett trykk der båten er, eller hold inne på kartet der
-      den faktisk ligger — starter klokka: posisjon, tidspunkt og dybde ordner
-      appen selv, og du får varsel før fristen. Røkter du og setter den ut
-      igjen, beholder teina nummer og navn. Bare klokka starter på nytt.</p>
-      <div class="appbit" role="img" aria-label="Eksempel på teinekort i appen: Odden, røktefrist i dag, 18 meter dyp, ståtid seks døgn og 21 timer">
-        <div class="teinekort-rad">
-          <span class="boyemarker" aria-hidden="true">1</span>
-          <span class="teinekort-navn">Odden</span>
-        </div>
-        <div class="frist"><span class="stor">I dag</span><span class="liten">røktefrist</span></div>
-        <div class="fristbar"><i></i></div>
-        <p class="meta">18 m dyp · Makrell · ståtid 6 d 21 t</p>
-      </div>
-    </div>
-    <figure class="telefon-side">
-      <div class="telefon">
-        <img src="/hummerfiske/skjermer/01-teiner.jpg" width="720" height="1564" loading="lazy"
-             alt="Lista «Mine teiner» i appen: fire teiner med navn, avstand, røktefrist som nedtelling og en frist som er i dag">
-      </div>
-      <figcaption>Fristen per teine, i lista.</figcaption>
+<!-- Stopp 1: før teina går i sjøen -->
+<section class="stopp" id="sett" aria-labelledby="h-sett">
+  <div class="tekst">
+    <h2 id="h-sett"><span class="ord"><span>Før teina går</span></span> <span class="ord" style="--i:1"><span>i sjøen</span></span></h2>
+    <p>Trykk der båten er, eller hold inne på kartet der teina står. Appen venter på god GPS før den lagrer posisjonen, og slår opp dybden hos Kartverket. Står en teine feil, flytter du den med «Rett posisjonen».</p>
+    <p>Fiskeridirektoratets fredningssoner og nullfiskeområder er tegnet på Kartverkets sjøkart. Lista og kartet viser om båten er i eller utenfor en sone, og hvilke regler som gjelder der båten er: sesong, teinegrense og mål.</p>
+    <p>Kartet kan lagres på telefonen, så det virker der det ikke er dekning.</p>
+    <dl class="merknad">
+      <dt>Sesongen</dt>
+      <dd>Åpner 1.&nbsp;oktober kl.&nbsp;08.00. Sør for fylkesgrensa mellom Vestland og Møre og Romsdal varer den ut november, nord for grensa ut desember. <span id="sesong-naa" hidden></span></dd>
+      <dt>Teiner</dt>
+      <dd>Høyst 10 per båt, og per person. I Oslofjorden, innenfor særområdet, er grensen 5.</dd>
+    </dl>
+  </div>
+  <div class="felt" style="--fh:1.16; --dfh:1.0">
+    <p class="sonebrikke" aria-hidden="true" style="--x:var(--leia); --y:0%; --dx:6%; --dy:0%"><span class="ute"><i></i>Utenfor fredningssone</span><span class="inne"><i></i>I fredningssone · teiner er forbudt her</span></p>
+    <i class="rp kun-d" data-rute="vei" style="--dx:97%; --dy:-8%"></i>
+    <i class="rp kun-d" data-rute="vei" style="--dx:98%; --dy:72%"></i>
+    <figure class="figur sonefig" role="img" aria-label="Illustrasjon: båten kjører inn i fredningssonen i Sandvigdalsfjorden i Kristiansand og ut igjen. Brikken viser om båten er i eller utenfor sonen." style="--x:16%; --y:21%; --w:42%; --dx:8%; --dy:15%; --dw:42%">
+<img class="sone-land" src="/hummerfiske/bilder/kart/sone-land.svg" width="3880" height="5420" alt="" loading="lazy" decoding="async">
+<svg viewBox="0 0 2880 4420" aria-hidden="true" focusable="false" data-vb="2880 4420" data-sone='[[1746,309],[1656,481],[1729,591],[1614,693],[1596,1384],[1497,1430],[1475,1630],[1159,1595],[1325,1927],[1121,2088],[1259,2215],[1224,2383],[1084,2619],[662,2685],[1053,2841],[964,2918],[1073,2946],[1043,3122],[974,3268],[829,3260],[840,3331],[742,3236],[585,3272],[788,3431],[666,3724],[300,3763],[902,4045],[1074,4060],[1207,3899],[1841,4120],[2263,4005],[2383,3227],[2243,2960],[2580,2944],[2244,2709],[2290,2666],[2148,2445],[2249,2221],[2004,2152],[2018,1988],[1914,2008],[1757,1767],[1663,1843],[1630,1710],[1552,1749],[1594,1613],[1704,1697],[1658,1522],[1783,1308],[1648,917],[1874,496],[1823,323]]'>
+<defs><path id="sone-sti1" pathLength="1" d="M1746 309l-34-5-30 30-1 47 17 6 9 25-16 39-20 5-15 25 40 51-7 21 2 16 31 1 7 6 0 15-17 29-28 21-53-5-17 57 8 65-13 45-3 45 8 68 11 41-6 40 10 80-5 22-16 26 23 60-5 28-12 9-18-2-4 15-1 13 20 54-2 43-13 39-31 6-10 40-16 2 3 8-16-7-10 7-9-12-10 2 0 34 6 17 5 68-20 31-28 8 13 20 5-10 5 11-8 21-24 7-48-9-30 31-24 5-56-16-10-10 14-19-3-6-30-13-22-23-33-16-29 15-4 18-17 1 13 47 23 34 8 27 37 42 26 63-1 32 12 21 25 24 23 42-10 47 7 8-25 31-28-1-34 30-99 26-15 20 23 38 53 53 2 11 41 7 19 18 8 43 0 20-28 37-15 68-24 50-25 29-29-6-30 32 14 38 11 12 0 17-8 20-49 44-46 14-71 5-3 7 5 7-8 18-35 16-108 5-44-9-37-9-9-22-11-8-42 9-13 33 54 20-5 21 20 22 114 22 66 29 8 11 6 33 12 8 15-3 15-26 17-4 23 0 46 23-3 20-17 43-57 0-12 14 5 13 34 11 61-6 9 10-6 39 7 17-22 69 5 4-14 47-47 3-17 20-1 17 18 34-28 33 22-10-6 37-10 12-26 15-119-23 14 28 23 10 5 9-31 24-27-2-25-38-2-18 6-5-50-32-31-1-30 11 2 10 30 3-4 12-28 19-10-5-8-23-20-7-42 7-16 10-1 10 13 18 38 12 13 12-19 21 21 20 43 16 29 25 30-3 36 28-6 12 2 26-31 53-6 41 8 10 7-18 7 0 2 16-26 45-25 28-27-4-28 35-21 9 6 12 29 5-13 23-75 19 0 9 19 6-21 20-21-8-17-31-6-24-42 39-145-11-3 8 13 10-25 0-12-12-17-2-14 16 95 32 29 18 23 26-3 10 425 188 11-7 22 15 172 15 10-29 0-35 13-18 67-59 43-20 40 13 33 25 128 24 42-5 58 31 25-5-9 11 58-5 52 12 36 20 18 32 16-11 23 3 92 55 22 21 139-37-9-18 18-20 16 12 0 11-6 9 264-72-4-38 13-30 12-57 7 0 7-34-25-12 17-37-14-18 15-11 23-2 69-539-13-16-5-22 1-23-30-36-7-24 31 3 5-8-62-39-20 10-17-9-9-15-8-33 2-28-10-17 2-10 23-5 13-29 24-1 11-22 96 22 73-2 38 31 5-1 2-15 7 5 0 7 22 2-1 8 14 3 10-19-7-13 7-3-4-10-70-24-2-14 8-11 0-17-103 19-62-58-33-70 5-29-65 4-10-9 22-14 25-1-1-28-23-38-36-19-20-49-7 0-23-25-1-21 21 4 9-25-17-11-23 3-20-21-2-19 28-50 36-18 22-39 0-17 21-16-24-36 17-3 5-8 1-28-5-9-37-7-6-15-9-4-59 0-35-21-16 11-29-2-54-31-24-31-3-39 5-15 35-7 14-13-2-11-15 8-13-17 9-24 10-9-2-6-23-6-5 8-6 35-10 2-40-22-20 3-14-25 1-18 9-12-80-59-19-25-7-22 0-24-29-15-5-20-13-21-27-1-2 19 4 15-30 41-20-11-19 13-39-26-8-52 6-22 13-17-5-16-6 1-10 54-18 21-14 1-25-25-5-13-13-49 3-37 13-12 24-4 4-7-7-15 18-12 15 6 23-6 26 36-12 4-14 20 3 5 15-2 31 28 23-7 2-56 15-5 9-12 1-16-7-14-29-16-37-56 21-61 26-12-9-40 13-28 42-52 32-21 0-29-6-7-12-38-13-10-47-7 6-10 0-46-54-60-2-145-7-39 8-34 11-14 17-63 20-7 23-24 44-78 30-17 54-67 14-40-4-41 9-36-3-39-10-30 2-16-11-44-10-16-17-9-2-19-22-20-19-3-12 9z"/>
+<pattern id="sone-fareskravur" width="72" height="72" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="72" height="72" fill="rgba(201,79,65,.13)"/><path d="M0 0V72" stroke="rgba(255,156,140,.55)" stroke-width="9"/></pattern>
+</defs>
+
+
+<use class="omr-fyll" href="#sone-sti1" fill="url(#sone-fareskravur)"/>
+<use class="omr" fill="none" stroke="#FF9C8C" stroke-width="26" stroke-linejoin="round" href="#sone-sti1"/>
+<path class="oyer" fill="#2B4D69" stroke="rgba(244,249,252,.8)" stroke-width="12" stroke-linejoin="round" d="M1366 1735l-14-5 0-31 38 26zM2018 2238l13-17 45-14 67 10-13 41-17 4-9 27-27 20-50-12-29-24zM2161 2247l-1-13 43-7 35 11 8 14-18 11-30-14-7 28-23-17zM1375 2311l33 43-5 27-24 8-29-9-16-21-13 14-2-9 16-48zM1950 2381l-2-22 33-24 65-6 27 17-3 10-26 3-16 11-7 22-61 2zM1918 2530l-11-15 1-26 17-75 70-11 38 5 21 16-20 32 14 21-3 11-7 11-18-3-14 10 17 12 3 12-11 30-30 45-12-12 0-17-21-17 8-10 2-18-27 14zM1172 2674l5 4 3 15-2 27-19 55-37-28-8-13-1-10 25-48zM944 2695l7 6-7 12-13-1-5-10zM1439 2989l3-10-8-21-42-13 66-7 31 22 6 15 19 8 25-28 27-6 14 15 118-26 34 10 16 30-6 17-25 17-66-5-12 10 0 36-14 30-27 13-35-11-22 7-16 36-41 28-31 10-15-18-47 5-41 42-40-7-3-15-23-29 14-32-5-28 15-25 34-23 13-23 17-11zM1622 2941l-11-10 10-6 26 8 0 8zM1666 3141l23-14 17 6-27 25-13-10zM1635 3154l27 20 6 40-53 27-31-5-18 20-57 23-18 4-7-13 16-54 56-26 23-21zM1669 3176l3-12 12 0-1 12zM1652 3231l4-10 16 7-7 17zM1267 3132l9 3 20 39-7 22-38-19-14-22-1-12 9-13zM1658 3298l-5-14 3-7 18 10-1 10zM1744 3382l-5-6 5-14 19 15zM1425 3806l-33-22 43 9-1 11zM1442 3804l11-7 15 9-12 10zM1247 3834l0 14-21 3 4-23zM1303 3843l25 2-2 12z"/>
+<g class="ms" fill="rgba(244,249,252,.8)" stroke="rgba(244,249,252,.8)"><rect x="120" y="382" width="500" height="36" stroke="none"/><path fill="none" stroke-width="14" d="M120 400H1120M120 350V450M620 364V436M1120 350V450"/></g>
+</svg>
+      <p class="sonenavn" aria-hidden="true">Sandvigdalsfjorden<small>fredningssone · Kristiansand</small></p>
+      <span class="km" aria-hidden="true">1 km</span>
+      <span class="npil" aria-hidden="true">N<svg viewBox="0 0 12 12"><path d="M6 0L10 11L6 8.5L2 11Z" fill="currentColor"/></svg></span>
+      <i class="rp kun-m" data-rute="vei" data-leia style="--y:104%"></i>
+      <i class="rp kun-m" data-rute="vei" data-sakte="inn" style="--x:16%; --y:95%"></i>
+      <i class="rp kun-d" data-rute="vei" style="--x:92%; --y:106%"></i>
+      <i class="rp kun-d" data-rute="vei" data-sakte="inn" style="--x:73%; --y:99%"></i>
+      <i class="rp" data-rute="vei" data-nokkel style="--x:70%; --y:72%"></i>
+      <i class="rp" data-rute="vei" data-sakte="ut" style="--x:73%; --y:99%; --fx:16%; --fy:95%"></i>
+      <i class="rp kun-b" data-rute="vei" style="--x:84%; --y:124%"></i>
+      <i class="rp kun-s" data-rute="vei" style="--x:52%; --y:116%"></i>
     </figure>
-  </section>
-
-  <!-- ============ 10 m — Sonene ============ -->
-  <div class="taumerke" aria-hidden="true"><span class="dybde">10 m</span></div>
-
-  <section class="seksjon">
-    <span class="karttall" style="top:30px; right:8%;" aria-hidden="true">9<sub>6</sub></span>
-    <div class="seksjon-innhold">
-      <span class="merke gronn">Sonene og reglene</span>
-      <h2>Rødt betyr én ting: forbud.</h2>
-      <p class="brod">Fiskeridirektoratets fredningssoner og nullfiskeområder
-      ligger inne, tegnet på ekte sjøkart fra Kartverket. Er du trygg, hvisker
-      appen. Nærmer du deg en sone, sier den fra — før teina går i sjøen.
-      Reglene vises for der båten er: sesong, teinegrense og lovlig mål.
-      Kartet kan lagres på telefonen for dekningshull på fjorden.</p>
-      <div class="chiprad">
-        <span class="sonechip"><span class="ok" aria-hidden="true">✓</span> Utenfor fredningssone · 5,6 km</span>
-      </div>
-      <div class="fareband" style="--d:.9s">I fredningssone — teiner er forbudt her
-        <small>Sandvigdalsfjorden i Kristiansand kommune</small></div>
-      <div class="fareband lillaband" style="--d:1.4s">I nullfiskeområde — alt fiske er forbudt her
-        <small>Indre Oslofjord</small></div>
-    </div>
-  </section>
-
-  <!-- ============ 14 m — Hummermålet ============ -->
-  <div class="taumerke" aria-hidden="true"><span class="dybde">14 m</span></div>
-
-  <section class="seksjon">
-    <span class="karttall" style="top:10px; right:7%;" aria-hidden="true">13<sub>5</sub></span>
-    <div class="seksjon-innhold">
-      <span class="merke">Hummermålet</span>
-      <h2>Holder den mål?<br>Legg den på skjermen.</h2>
-      <p class="brod">Ryggskjoldet skal være minst 90 millimeter, og noen
-      steder gjelder et maksimalmål på 115. Appen har linjalen på skjermen,
-      viser målet som gjelder der du er, og hjelper deg å sjekke rogn før
-      hummeren går i sanketeina eller tilbake i sjøen.</p>
-      <div class="appbit" role="img" aria-label="Eksempel på skjermlinjalen i appen: skala fra 0 til 120 millimeter, minstemål 90 markert, maksimalmål 115 der det gjelder">
-        <div class="linjal" aria-hidden="true">
-          <span class="merke90">minstemål 90 mm</span>
-          <span class="merke115">maks 115</span>
-          <span class="maal"></span>
-          <span class="skala"></span>
-          <span class="strek lang" style="left:0"></span>
-          <span class="strek" style="left:8.33%"></span>
-          <span class="strek" style="left:16.66%"></span>
-          <span class="strek" style="left:25%"></span>
-          <span class="strek" style="left:33.33%"></span>
-          <span class="strek lang" style="left:41.66%"></span>
-          <span class="strek" style="left:50%"></span>
-          <span class="strek" style="left:58.33%"></span>
-          <span class="strek" style="left:66.66%"></span>
-          <span class="strek lang" style="left:75%"></span>
-          <span class="strek" style="left:83.33%"></span>
-          <span class="strek" style="left:91.66%"></span>
-          <span class="strek lang" style="left:100%"></span>
-          <span class="tall" style="left:0">0</span>
-          <span class="tall" style="left:41.66%">50</span>
-          <span class="tall" style="left:75%">90</span>
-          <span class="tall" style="left:100%">120</span>
-        </div>
-        <p class="linjal-etikett">Ryggskjold fra øyehulen til bakkanten av skallet</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ 18 m — Kompasset ============ -->
-  <div class="taumerke" aria-hidden="true"><span class="dybde">18 m</span></div>
-
-  <section class="seksjon med-telefon venstre">
-    <span class="karttall" style="top:-6px; left:4%;" aria-hidden="true">15<sub>4</sub></span>
-    <span class="karttall" style="top:200px; right:10%;" aria-hidden="true">21</span>
-    <div class="seksjon-innhold">
-      <span class="merke hvit">Kompasset</span>
-      <h2>Bøya er borte.<br>Teina er der ennå.</h2>
-      <p class="brod">Trykk på avstanden i lista, så peker pila mot teina:
-      retning og meter, rett fra der båten ligger. Finn den igjen i bølgene,
-      eller sokne der den står hvis bøya har slitt seg. Og står en teine feil
-      i appen, retter du posisjonen på kartet.</p>
-      <div class="appbit" role="img" aria-label="Eksempel på kompasset i appen: pila peker mot teina Odden, 240 meter unna">
-        <div class="kompass" aria-hidden="true">
-          <span class="n">N</span><span class="s">S</span><span class="e">Ø</span><span class="w">V</span>
-          <span class="naal"></span>
-          <span class="boye-mal"></span>
-        </div>
-        <p class="kompass-tekst"><span class="stor">240 m</span><span class="liten">til Odden · NØ</span></p>
-      </div>
-    </div>
-    <figure class="telefon-side">
-      <div class="telefon">
-        <img src="/hummerfiske/skjermer/03-kompass.jpg" width="720" height="1564" loading="lazy"
-             alt="Kompasset i appen: en pil som peker mot teina Odden, 620 meter unna i retning sørvest">
-      </div>
-      <figcaption>Retning og meter til teina.</figcaption>
+    <i class="rp kun-s" data-rute="vei" style="--x:22%; --y:84%"></i>
+    <span class="boye" aria-hidden="true" data-rute="boye" style="--x:22%; --y:92%; --dx:40%; --dy:89%; --p:.73; --kc:var(--gul)">
+      <svg viewBox="-30 -30 60 60"><circle class="krus" r="13"/><circle class="krus" r="13"/><circle class="kbunn" r="15"/><circle class="klokke" r="15" pathLength="1" transform="rotate(-90)"/><g class="kule"><circle r="10.5" fill="#F29A4B"/><circle class="kant" r="10.5"/><text y="4.4">2</text></g></svg>
+      <span class="boyenavn">Skjæret<small>1 d 21 t</small></span>
+    </span>
+    <i class="rp kun-b" data-rute="vei" style="--x:22%; --y:101%"></i>
+    <figure class="tlf" style="--x:62%; --y:31%; --w:30%; --r:3deg; --dx:62%; --dy:10%; --dw:32%" data-dybde=".07">
+      <div class="tlf-inn"><div class="vipp"><div class="ramme-t"><img src="/hummerfiske/skjermer/02-settkort.jpg" width="720" height="1564" loading="lazy" decoding="async" alt="Skjermbilde fra appen: Kartverkets sjøkart med båten og kortet «Sett teine her?». Kortet viser at punktet er utenfor fredningssone, 4 meter dypt og 260 meter fra båten."></div></div></div>
     </figure>
-  </section>
+    <i class="rp kun-d" data-rute="vei" style="--dx:40%; --dy:104%"></i>
+  </div>
+</section>
 
-  <!-- ============ 22 m — Fangstplassene og statistikken ============ -->
-  <div class="taumerke" aria-hidden="true"><span class="dybde">22 m</span></div>
-
-  <section class="seksjon med-telefon">
-    <span class="karttall" style="top:20px; right:6%;" aria-hidden="true">19<sub>8</sub></span>
-    <div class="seksjon-innhold">
-      <span class="merke rav">Fangstplassene<span class="pro-tag">PRO</span></span>
-      <h2>Hummeren husker ura.<br>Appen husker den for deg.</h2>
-      <p class="brod">Hver fangst lagres der den skjedde. Plassene klynges på
-      sjøkartet og rangeres — så du vet hvor du skal sette til høsten. Og
-      statistikken regner ut, sesong for sesong, hva som faktisk fisker best
-      hos <em>deg</em>: agn, dybde og teinetype.</p>
-      <div class="appbit" role="img" aria-label="Eksempel fra statistikken: trofémerke med 7 hummer, Sild 2,0 per trekk, Makrell 1,6, Sei 1,0">
-        <span class="trofepille"><span aria-hidden="true">🏆</span> 7</span>
-        <div class="stat">
-          <div class="stat-rad"><b>Sild</b><span>2,0 per trekk · 4 hummer</span></div>
-          <div class="stat-bar" style="--d:.3s"><i style="width:100%"></i></div>
-          <div class="stat-rad"><b>Makrell</b><span>1,6 per trekk · 8 hummer</span></div>
-          <div class="stat-bar" style="--d:.55s"><i style="width:80%"></i></div>
-          <div class="stat-rad"><b>Sei</b><span>1,0 per trekk · 1 hummer</span></div>
-          <div class="stat-bar" style="--d:.8s"><i style="width:50%"></i></div>
-        </div>
-      </div>
-    </div>
-    <figure class="telefon-side">
-      <div class="telefon">
-        <img src="/hummerfiske/skjermer/04-plasser.jpg" width="720" height="1564" loading="lazy"
-             alt="Fangstplassene i appen: sjøkartet med de beste plassene merket, og en liste rangert etter antall hummer">
-      </div>
-      <figcaption>De gode plassene, på sjøkartet.</figcaption>
+<!-- Stopp 2: røkteklokka -->
+<section class="stopp v" id="klokka" aria-labelledby="h-klokka">
+  <div class="tekst">
+    <h2 id="h-klokka"><span class="ord"><span>Hver teine har</span></span> <span class="ord" style="--i:1"><span>sin klokke</span></span></h2>
+    <p>Loven krever at teinene røktes minst én gang i uka. Hver teine får derfor en frist sju døgn etter at den ble satt. Den blir gul etter 4,5 døgn og rød etter 6, og du får varsel når teina har stått i seks døgn og to timer før fristen.</p>
+    <p>Når du har røktet, velger du «Satt ut igjen» eller «Tatt i båten». Settes den ut igjen, står den på samme sted med ny klokke, og beholder nummer og navn.</p>
+  </div>
+  <div class="felt" style="--fh:1.15; --dfh:.95">
+    <i class="rp kun-d" data-rute="vei" style="--dx:2%; --dy:-8%"></i>
+    <i class="rp kun-d" data-rute="vei" style="--dx:-3%; --dy:28%"></i>
+    <figure class="figur klokkefig" aria-hidden="true" style="--x:6%; --y:4%; --w:58%; --dx:3%; --dy:6%; --dw:52%">
+<svg viewBox="-110 -110 220 220" aria-hidden="true" focusable="false">
+<circle class="bunn" r="80" fill="none" stroke="rgba(244,249,252,.12)" stroke-width="9"/>
+<path class="bue b1" pathLength="1" fill="none" stroke="#8FDCB2" stroke-width="9" d="M0 -80A80 80 0 1 1 -61.8 50.7"/>
+<path class="bue b2" pathLength="1" fill="none" stroke="#F4C978" stroke-width="9" d="M-63.2 49A80 80 0 0 1 -63.2 -49"/>
+<path class="bue b3" pathLength="1" fill="none" stroke="#FF9C8C" stroke-width="9" d="M-61.8 -50.7A80 80 0 0 1 -26.4 -75.5"/>
+<path class="dager" fill="none" stroke="rgba(244,249,252,.55)" stroke-width="1.4" d="M0 -86L0 -92M67.2 -53.6L71.9 -57.4M83.8 19.1L89.7 20.5M37.3 77.5L39.9 82.9M-37.3 77.5L-39.9 82.9M-83.8 19.1L-89.7 20.5M-67.2 -53.6L-71.9 -57.4"/>
+<g class="vmerker"><g class="v1"><circle cx="-51.6" cy="-41.2" r="6" fill="#F4C978" stroke="#F4C978" stroke-width="2"/><path d="M-51.6 -43.8v3M-51.6 -38.8v.1" fill="none" stroke="#0D2E4C" stroke-width="1.4" stroke-linecap="round"/></g><g class="v2"><circle cx="-4.9" cy="-65.8" r="6" fill="#0D2E4C" stroke="#F4C978" stroke-width="2"/><path d="M-4.9 -68.4v3M-4.9 -63.4v.1" fill="none" stroke="#F4C978" stroke-width="1.4" stroke-linecap="round"/></g></g>
+</svg>
+      <span class="etk e45" style="left:12.3%; top:80%; color:var(--gul)">4,5 d<small>gul</small></span>
+      <span class="etk e6" style="left:12.3%; top:20%; color:var(--fare)">6 d<small>rød</small></span>
+      <span class="etk e7" style="left:50%; top:.9%">7 d<small>frist</small></span>
+      <span class="boye" style="--x:50%; --y:38%; --p:.946; --kc:var(--fare)">
+        <svg viewBox="-30 -30 60 60"><circle class="kbunn" r="15"/><circle class="klokke for-ring" r="15" pathLength="1" transform="rotate(-90)"/><path class="etter-ring" d="M0 -15A15 15 0 0 1 1.05 -14.96" fill="none" stroke="#8FDCB2" stroke-width="2.4"/><g class="kule"><path d="M0 -10.5A10.5 10.5 0 0 0 0 10.5Z" fill="#F4D35E"/><path d="M0 -10.5A10.5 10.5 0 0 1 0 10.5Z" fill="#2A2F36"/><circle class="kant" r="10.5"/><text class="lys" y="4.4">3</text></g></svg>
+      </span>
+      <p class="avles"><span class="for"><b>I dag</b><small>røktefrist <span class="kl">kl.&nbsp;18.41</span></small></span><span class="etter"><b>6 d 23 t</b><small>til røktefrist</small></span></p>
+      <i class="rp kun-m" data-rute="vei" data-leia style="--y:41%"></i>
+      <i class="rp" data-rute="hvil" style="--x:5%; --y:50%"></i>
+      <i class="rp kun-m" data-rute="vei" data-leia style="--y:55%"></i>
     </figure>
-  </section>
-
-  <!-- ============ 26 m — Sjø og vær ============ -->
-  <div class="taumerke" aria-hidden="true"><span class="dybde">26 m</span></div>
-
-  <section class="seksjon">
-    <span class="karttall" style="top:30px; left:6%;" aria-hidden="true">25</span>
-    <div class="seksjon-innhold">
-      <span class="merke rav">Sjø og vær<span class="pro-tag">PRO</span></span>
-      <h2>Varselet der teina står,<br>ikke der du bor.</h2>
-      <p class="brod">Bølgehøyde, vind og sjøtemperatur for hver teines
-      posisjon, fra Meteorologisk institutt. Så vet du før du løsner
-      fortøyningen om det er en dag for å røkte, eller en dag for å vente.</p>
-      <div class="appbit" role="img" aria-label="Eksempel på værkortet i appen: bølgehøyde 0,6 meter, vind 4 meter i sekundet fra sørvest, sjøtemperatur 12 grader">
-        <div class="vaer-rad">
-          <div><b>0,6 m</b><span>bølgehøyde</span></div>
-          <div><b>4 m/s</b><span>vind fra SV</span></div>
-          <div><b>12°</b><span>i sjøen</span></div>
-        </div>
-        <div class="bolgelinje" aria-hidden="true">
-          <svg viewBox="0 0 800 44" preserveAspectRatio="none">
-            <path d="M0,26 C50,14 100,14 150,26 S250,38 300,26 S400,14 450,26 S550,38 600,26 S700,14 750,26 S850,38 900,26"
-                  fill="none" stroke="rgba(159,203,232,.7)" stroke-width="2"/>
-            <path d="M0,34 C60,26 110,26 170,34 S280,42 340,34 S450,26 510,34 S620,42 680,34 S790,26 850,34"
-                  fill="none" stroke="rgba(159,203,232,.3)" stroke-width="2"/>
-          </svg>
-        </div>
-        <p class="vaer-kilde">Varsel fra Meteorologisk institutt</p>
-      </div>
+    <div class="rokt" aria-hidden="true" style="--x:var(--leia); --y:66%; --w:calc(92% - var(--leia)); --dx:3%; --dy:67%; --dw:52%">
+    <div class="varsel">
+      <img src="/hummerfiske/bilder/ikon-64.png" width="20" height="20" alt="" loading="lazy" decoding="async">
+      <p><b>Røktefrist i morgen</b><span>Ura har stått seks døgn i sjøen. Røkt den innen kl.&nbsp;18.41 i morgen.</span></p>
     </div>
-  </section>
-
-  <!-- ============ 30 m — Sanketeina ============ -->
-  <div class="taumerke" aria-hidden="true"><span class="dybde">30 m</span></div>
-
-  <section class="seksjon">
-    <span class="karttall" style="top:340px; right:6%;" aria-hidden="true">28</span>
-    <div class="seksjon-innhold">
-      <span class="merke lillam">Sanketeina</span>
-      <h2>Fra fjord til gryte,<br>med fristene i orden.</h2>
-      <p class="brod">Sanketeina i appen teller hummerne dine, minner deg på mating,
-      og holder styr på meldeplikten 1. desember og tømmefristen før nyttår —
-      med hendelseslogg du kan stole på.</p>
-      <div class="appbit" role="img" aria-label="Eksempel på telleren i appen: fire hummer i sanketeina">
-        <div class="teller">
-          <span class="knapp-rund" aria-hidden="true">−</span>
-          <span class="tall" data-tell="4">4</span>
-          <span class="knapp-rund" aria-hidden="true">+</span>
-        </div>
-        <p class="teller-etikett">hummer i sanketeina ·
-          <span class="lob" style="--d:.5s">🦞</span><span class="lob" style="--d:.8s">🦞</span><span class="lob" style="--d:1.1s">🦞</span><span class="lob" style="--d:1.4s">🦞</span></p>
-      </div>
+    <p class="utfall"><span class="lys">Satt ut igjen</span><span class="omriss">Tatt i båten</span></p>
     </div>
-  </section>
+    <figure class="tlf" style="--x:64%; --y:6%; --w:30%; --r:-3deg; --dx:64%; --dy:4%; --dw:31%" data-dybde=".07">
+      <div class="tlf-inn"><div class="vipp"><div class="ramme-t"><img src="/hummerfiske/skjermer/01-teiner.jpg" width="720" height="1564" loading="lazy" decoding="async" alt="Skjermbilde fra appen: lista Mine teiner med fire teiner. Ura er rød med røktefrist i dag kl. 18.41, Skjæret er gul med 1 døgn og 21 timer igjen, Odden og Bestefars ura er grønne. Øverst står det at båten er utenfor fredningssone."></div></div></div>
+    </figure>
+    <i class="rp kun-d" data-rute="vei" style="--dx:-3%; --dy:37%"></i>
+    <i class="rp kun-d" data-rute="vei" style="--dx:-3%; --dy:60%"></i>
+    <i class="rp kun-d" data-rute="vei" style="--dx:-2%; --dy:104%"></i>
+  </div>
+</section>
 
-  <!-- ============ Bunnen ============ -->
-  <div class="taumerke" aria-hidden="true"><span class="dybde">34 m</span></div>
+<!-- Stopp 3: kompasset -->
+<section class="stopp" id="kompass" aria-labelledby="h-kompass">
+  <div class="tekst">
+    <h2 id="h-kompass"><span class="ord"><span>Pila peker</span></span> <span class="ord" style="--i:1"><span>mot teina</span></span></h2>
+    <p>Kompasset i appen peker mot teina og viser retning og avstand i meter fra der båten er. Det er til hjelp når bøya er vanskelig å se, i bølger eller i mørket.</p>
+  </div>
+  <div class="felt" style="--fh:.92; --dfh:.95">
+    <i class="rp kun-d" data-rute="vei" style="--dx:10%; --dy:-8%"></i>
+    <figure class="figur rosefig" aria-hidden="true" style="--x:6%; --y:4%; --w:54%; --dx:22%; --dy:8%; --dw:50%">
+      <svg viewBox="-120 -120 240 240"><line class="peilelinje" x1="0" y1="0" x2="-106.3" y2="122.2"/></svg>
+      <div class="lag skive"><svg viewBox="-120 -120 240 240">
+        <circle class="ring" r="90"/><circle class="ring" r="104"/>
+        <circle class="tikk" r="92" stroke-width="4" pathLength="360" stroke-dasharray=".62 1.38" stroke-dashoffset=".31"/>
+        <circle class="tikk" r="94" stroke-width="8" pathLength="360" stroke-dasharray=".61 9.39" stroke-dashoffset=".305"/>
+        <path class="fyll" d="M0 0L0 -66L9 0ZM0 0L66 0L0 9ZM0 0L0 66L-9 0ZM0 0L-66 0L0 -9ZM0 0L25.5 -25.5L4.2 4.2ZM0 0L25.5 25.5L-4.2 4.2ZM0 0L-25.5 25.5L-4.2 -4.2ZM0 0L-25.5 -25.5L4.2 -4.2Z"/><path class="strek" d="M0 0L0 -66L-9 0ZM0 0L66 0L0 -9ZM0 0L0 66L9 0ZM0 0L-66 0L0 9ZM0 0L25.5 -25.5L-4.2 -4.2ZM0 0L25.5 25.5L4.2 -4.2ZM0 0L-25.5 25.5L4.2 4.2ZM0 0L-25.5 -25.5L-4.2 4.2Z"/>
+      </svg><span class="nord">N</span></div>
+      <div class="lag peil"><svg viewBox="-120 -120 240 240"><path d="M0 -112L-7 -95L7 -95Z"/></svg></div>
+      <p class="etk rose-etk"><b>620 m</b><span>SV · 221°</span><small>til Odden</small></p>
+      <i class="rp" data-rute="hvil" style="--x:50%; --y:50%"></i>
+      <span class="boye" data-rute="boye" style="--x:5.7%; --y:100.9%; --p:.24">
+        <svg viewBox="-30 -30 60 60"><circle class="krus" r="13"/><circle class="krus" r="13"/><circle class="kbunn" r="15"/><circle class="klokke" r="15" pathLength="1" transform="rotate(-90)"/><g class="kule"><path d="M0 -10.5A10.5 10.5 0 0 0 0 10.5Z" fill="#E86A5A"/><path d="M0 -10.5A10.5 10.5 0 0 1 0 10.5Z" fill="#F4F9FC"/><circle class="kant" r="10.5"/><text y="4.4">1</text></g></svg>
+        <span class="boyenavn">Odden<small>5 d 7 t</small></span>
+      </span>
+    </figure>
+    <figure class="tlf" style="--x:64%; --y:2%; --w:28%; --r:3deg; --dx:68%; --dy:2%; --dw:29%" data-dybde=".07">
+      <div class="tlf-inn"><div class="vipp"><div class="ramme-t"><img src="/hummerfiske/skjermer/03-kompass.jpg" width="720" height="1564" loading="lazy" decoding="async" alt="Skjermbilde fra appen: kompasset over lista, med pila mot teina Odden, 620 meter unna i retning sørvest, 221 grader."></div></div></div>
+    </figure>
+    <i class="rp kun-d" data-rute="vei" style="--dx:8%; --dy:104%"></i>
+  </div>
+</section>
 
-  <section class="bunn" id="bunn">
-    <div class="bunn-scene" aria-hidden="true">
-      <div class="bunnlys"></div>
-      <div class="tau-ned"></div>
-      <span class="hummer">🦞</span>
-      <svg class="teine-stor" viewBox="0 0 220 84" fill="none">
-        <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"
-              fill="rgba(244,249,252,.07)"/>
-        <g clip-path="url(#profil2)" stroke="rgba(244,249,252,.3)" stroke-width="1.2">
-          <path d="M27.5,0 V84 M55,0 V84 M82.5,0 V84 M110,0 V84 M137.5,0 V84 M165,0 V84 M192.5,0 V84"/>
-          <path d="M0,25.2 H220 M0,46.2 H220 M0,67.2 H220"/>
-        </g>
-        <defs><clipPath id="profil2">
-          <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"/>
-        </clipPath></defs>
-        <path d="M212,84 L8,84 Q0,84 0,76 L0,46 Q26.4,8.4 110,0 Q193.6,8.4 220,46 L220,76 Q220,84 212,84 Z"
-              stroke="rgba(244,249,252,.9)" stroke-width="3"/>
-        <circle cx="134" cy="50" r="15" stroke="rgba(244,249,252,.9)" stroke-width="3"/>
-        <circle cx="134" cy="50" r="8.5" stroke="rgba(244,249,252,.5)" stroke-width="2"/>
+<!-- Stopp 4: hummermålet -->
+<section class="stopp v" id="maal" aria-labelledby="h-maal">
+  <div class="tekst">
+    <h2 id="h-maal"><span class="ord"><span>Holder den mål?</span></span></h2>
+    <p>Legg hummeren på skjermen. Linjalen i appen måler ryggskjoldet, fra bakre kant av øyehulen til der ryggskjoldet slutter.</p>
+    <p>Minstemålet er 90 millimeter. Fra svenskegrensa til og med Agder er 115 millimeter eller mer ulovlig, så der er hummeren lovlig fra 90 til under 115. Rognhummer skal alltid settes tilbake.</p>
+  </div>
+  <div class="felt" style="--fh:1.25; --dfh:1.05">
+    <i class="rp kun-d" data-rute="vei" style="--dx:-4%; --dy:-8%"></i>
+    <i class="rp kun-d" data-rute="vei" style="--dx:-4%; --dy:70%"></i>
+    <figure class="tlf" style="--x:52%; --y:0%; --w:42%; --r:0deg; --dx:58%; --dy:0%; --dw:34%">
+      <div class="tlf-inn"><div class="vipp"><div class="ramme-t"><img src="/hummerfiske/skjermer/07-hummermaal.jpg" width="720" height="1564" loading="lazy" decoding="async" alt="Skjermbilde fra appen: hummermålet, en linjal i millimeter langs kanten av skjermen, med en linje ved minstemålet 90 millimeter og en ved maksimalmålet under 115 millimeter."></div></div></div>
+    </figure>
+    <div class="hummer" aria-hidden="true">
+      <svg viewBox="-45 -25 90 200"><defs>
+        <linearGradient id="hm-v" x1="0" y1="-25" x2="0" y2="175" gradientUnits="userSpaceOnUse"><stop offset=".075" stop-color="#fff" stop-opacity="0"/><stop offset=".115" stop-color="#fff"/><stop offset=".64" stop-color="#fff"/><stop offset=".78" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        <linearGradient id="hm-h" x1="-45" y1="0" x2="45" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".2" stop-color="#fff"/><stop offset=".8" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        <mask id="hm-maske" maskUnits="userSpaceOnUse" x="-45" y="-25" width="90" height="200"><rect x="-45" y="-25" width="90" height="200" fill="url(#hm-v)"/></mask>
+        <mask id="hm-maske2" maskUnits="userSpaceOnUse" x="-45" y="-25" width="90" height="200"><rect x="-45" y="-25" width="90" height="200" fill="url(#hm-h)"/></mask>
+      </defs><g mask="url(#hm-maske)"><g mask="url(#hm-maske2)"><g transform="rotate(90)">
+<g><path pathLength="1" class="h1" d="M-15 0C-10 -1.5 -5 -3 -1.5 -5.5C2 -10 8 -14 18 -17C38 -22 62 -24 84 -21.5C90 -21 94 -19 95 -17Q97 0 95 17C94 19 90 21 84 21.5C62 24 38 22 18 17C8 14 2 10 -1.5 5.5C-5 3 -10 1.5 -15 0Z"/>
+<path pathLength="1" class="h3" d="M36 -20.5C43 -9 43 9 36 20.5M20 -16C24 -5 24 5 20 16"/>
+<path pathLength="1" class="h1" d="M-1 -10.8a2.6 2.2 0 1 0 0.01 0M-1 6.2a2.6 2.2 0 1 0 0.01 0"/>
+<path pathLength="1" class="h1" d="M96 -17C112 -19 140 -19 170 -16C178 -15 184 -14 188 -13M96 17C112 19 140 19 170 16C178 15 184 14 188 13"/>
+<path pathLength="1" class="h2" d="M111 -18.5Q115 0 111 18.5M127 -19Q131 0 127 19M143 -18.5Q147 0 143 18.5M158 -17.5Q162 0 158 17.5M173 -16Q176.5 0 173 16M188 -13Q191 0 188 13"/>
+<path pathLength="1" class="h1" d="M188 -13C198 -19 209 -28 219 -25C225 -17 225 -8 223 -3C224 -1 224 1 223 3C225 8 225 17 219 25C209 28 198 19 188 13"/>
+<path pathLength="1" class="h3" d="M190 -6L221 -12M190 6L221 12M191 0L224 0"/>
+<path pathLength="1" class="h1" d="M12 -15C2 -21 -10 -26 -23 -29C-26 -26 -26 -22 -23 -20C-12 -18 0 -14 8 -10M-23 -29C-28 -32 -33 -34 -38 -33C-40 -29 -38 -25 -33 -23C-29 -22 -26 -21 -23 -20"/>
+<path pathLength="1" class="h1" d="M12 15C2 21 -10 26 -23 29C-26 26 -26 22 -23 20C-12 18 0 14 8 10M-23 29C-28 32 -33 34 -38 33C-40 29 -38 25 -33 23C-29 22 -26 21 -23 20"/></g>
+      </g></g></g></svg>
+    </div>
+    <figure class="linjal" aria-hidden="true">
+      <svg viewBox="-14 -2 86.94 128">
+        <path class="lj" stroke-width=".35" d="M-8 0V125M-8 0H-13M-8 5H-11M-8 10H-13M-8 15H-11M-8 20H-13M-8 25H-11M-8 30H-13M-8 35H-11M-8 40H-13M-8 45H-11M-8 50H-13M-8 55H-11M-8 60H-13M-8 65H-11M-8 70H-13M-8 75H-11M-8 80H-13M-8 85H-11M-8 90H-13M-8 95H-11M-8 100H-13M-8 105H-11M-8 110H-13M-8 115H-11M-8 120H-13M-8 125H-11"/>
+        <rect class="stav" x="-7.4" y="0" width="1.8" height="95" rx=".5"/>
+        <path class="m90" pathLength="1" d="M-8 90H72.94"/>
+        <path class="m115" pathLength="1" d="M-8 115H72.94"/>
       </svg>
-      <div class="tang" style="left:14%; animation-delay:0s">
-        <svg viewBox="0 0 26 88"><path d="M10,88 Q0,44 13,4 Q26,48 16,88 Z" fill="rgba(143,220,178,.25)"/></svg>
-      </div>
-      <div class="tang" style="left:22%; height:64px; animation-delay:1.2s">
-        <svg viewBox="0 0 26 88"><path d="M10,88 Q2,40 13,4 Q24,44 16,88 Z" fill="rgba(143,220,178,.18)"/></svg>
-      </div>
-      <div class="tang" style="right:16%; height:76px; animation-delay:.6s">
-        <svg viewBox="0 0 26 88"><path d="M10,88 Q0,44 13,4 Q26,48 16,88 Z" fill="rgba(143,220,178,.22)"/></svg>
-      </div>
-      <div class="tang" style="right:24%; height:52px; animation-delay:1.8s">
-        <svg viewBox="0 0 26 88"><path d="M10,88 Q2,40 13,4 Q24,44 16,88 Z" fill="rgba(143,220,178,.15)"/></svg>
-      </div>
-      <div class="bunn-boble bb-1"></div>
-      <div class="bunn-boble bb-2"></div>
-      <div class="bunnlinje"></div>
-    </div>
+    </figure>
+    <p class="mm-etk e90" aria-hidden="true">90<span class="lang"> · minstemål</span></p>
+    <p class="mm-etk e115" aria-hidden="true">115<span class="lang"> · maksimalmål</span></p>
+    <p class="dom" aria-hidden="true"><b><span class="tall">95</span> mm</b><span class="dom-ord">lovlig</span></p>
+    <span class="boye" aria-hidden="true" data-rute="boye" style="--x:14%; --y:92%; --dx:14%; --dy:90%; --p:.012">
+      <svg viewBox="-30 -30 60 60"><circle class="krus" r="13"/><circle class="krus" r="13"/><circle class="kbunn" r="15"/><circle class="klokke" r="15" pathLength="1" transform="rotate(-90)"/><g class="kule"><circle r="10.5" fill="#8FC7EE"/><circle class="kant" r="10.5"/><text y="4.4">4</text></g></svg>
+      <span class="boyenavn">Bestefars ura<small>6 d 21 t</small></span>
+    </span>
+    <i class="rp kun-d" data-rute="vei" style="--dx:40%; --dy:104%"></i>
+  </div>
+</section>
 
-    <div class="bunn-tekst seksjon-innhold-fri">
-      <h2>Her nede avgjøres det.</h2>
-      <p>Riktig plass, riktig agn, riktig dybde — og en teine som står lovlig.
-      Hummerfiske holder orden på alt sammen, så du kan bruke tida på det
-      eneste appen ikke kan: å lokke hummeren inn kalven.</p>
-      <p class="skittfiske">Skitt fiske! 🦞</p>
-      <a class="hent" href="https://apps.apple.com/no/app/hummerfiske/id6802721661?l=nb">
-        <img src="/hummerfiske/appstore-merke.svg" alt="Last ned fra App Store" width="180" height="60">
-      </a>
-    </div>
-
-    <div class="kort-rad">
-      <div class="kort">
-        <h3>💬 Support</h3>
-        <p>Spørsmål, feil eller forslag? Alt leses og besvares.</p>
-        <a class="knapp" href="mailto:danielhellenes@me.com">Send e-post</a>
+<!-- Stopp 5: sanketeina og sesongen -->
+<section class="stopp" id="sanketeina" aria-labelledby="h-sanke">
+  <div class="tekst">
+    <h2 id="h-sanke"><span class="ord"><span>Sanketeina</span></span> <span class="ord" style="--i:1"><span>holder tellingen</span></span></h2>
+    <p>Appen teller hummerne i sanketeina, minner deg om mating og holder styr på fristene.</p>
+    <p>Har du hummer i sjøen i desember, skal det meldes til Fiskeridirektoratet innen 1.&nbsp;desember, der det gjelder. Sanketeina skal være tømt innen 31.&nbsp;desember.</p>
+  </div>
+  <div class="felt" style="--fh:1.2; --dfh:.95">
+    <i class="rp kun-d" data-rute="vei" style="--dx:20%; --dy:-8%"></i>
+    <span class="boye" aria-hidden="true" style="--x:16%; --y:6%; --dx:30%; --dy:4%">
+      <svg viewBox="-30 -30 60 60"><circle class="krus" r="13"/><circle class="krus" r="13"/><g class="kule"><circle r="10.5" fill="#F4F9FC"/><circle class="kant" r="10.5"/><text class="s" y="3.9">S</text></g></svg>
+      <span class="boyenavn" style="--kc:var(--tekst2)">Sanketeina<small>4 hummer</small><small>mating om 2 dager</small></span>
+    </span>
+    <i class="rp" data-rute="slutt" style="--x:7%; --y:9%; --dx:24%; --dy:9%"></i>
+    <p class="kal-les reserve" aria-hidden="true" style="--x:var(--leia); --y:30%; --w:calc(59% - var(--leia)); --dx:2%; --dy:40%; --dw:58%"><b id="kal-tall">31.&nbsp;desember</b> <span id="kal-tekst">er tømmefristen for sanketeina</span></p>
+    <figure class="tlf" style="--x:62%; --y:4%; --w:30%; --r:-3deg; --dx:66%; --dy:0%; --dw:30%" data-dybde=".07">
+      <div class="tlf-inn"><div class="vipp"><div class="ramme-t"><img src="/hummerfiske/skjermer/06-sanketeina.jpg" width="720" height="1564" loading="lazy" decoding="async" alt="Skjermbilde fra appen: sanketeina med fire hummer og 81 dager til tømming, mating hver tredje dag med neste mating om 2 dager, og meldeplikt og frister med frist 1. desember."></div></div></div>
+    </figure>
+    <figure class="kalender" aria-hidden="true" style="--x:var(--leia); --y:58%; --w:calc(100% - var(--leia) - var(--marg)); --dx:2%; --dy:62%; --dw:60%">
+      <div class="kal-mnd"><span>oktober</span><span>november</span><span>desember</span></div>
+      <div class="kal-gitter">
+        <i class="kal-skille" style="left:33.696%"></i><i class="kal-skille" style="left:66.304%"></i>
+        <div class="kal-rad"><p>Sør for fylkesgrensa</p><svg><rect width="66.304%" height="8" rx="4" fill="#8FDCB2"/></svg></div>
+        <div class="kal-rad" style="--i:1"><p>Nord for fylkesgrensa</p><svg><rect width="100%" height="8" rx="4" fill="#8FDCB2"/></svg></div>
+        <div class="kal-rad" style="--i:2"><p>Sanketeina</p><svg><rect width="100%" height="8" rx="4" fill="#8FC7EE"/></svg><i class="rute" style="left:66.304%; top:calc(100% - 4px)"></i><i class="rute r2" style="left:98.913%; top:calc(100% - 4px)"></i></div>
+        <i class="idag" id="idag"></i>
       </div>
-      <div class="kort">
-        <h3>🔒 Personvern</h3>
-        <p>Appen samler ikke inn noen data om deg. Alt blir på telefonen din.</p>
-        <a class="knapp" href="/hummerfiske/personvern/">Les erklæringen</a>
-      </div>
-      <div class="kort">
-        <h3>👤 Om prosjektet</h3>
-        <p>Laget av én person på fritiden — av og for folk som setter teiner.</p>
-        <a class="knapp" href="https://apps.apple.com/no/app/hummerfiske/id6802721661?l=nb">Hent appen i App Store</a>
-      </div>
-    </div>
+      <div class="kal-merker"><i style="left:66.304%; height:20px"></i><span style="left:66.304%; top:6px">meldefrist 1.&nbsp;des</span><i style="left:98.913%; height:40px"></i><span style="left:98.913%; top:24px">tømmes innen 31.&nbsp;des</span></div>
+    </figure>
+  </div>
+</section>
 
-    <p class="attribusjon">Sjøkart og dybdedata © Kartverket (CC BY 4.0) ·
-    Fredningssoner og regelområder fra Fiskeridirektoratet (NLOD) ·
-    Vær- og bølgedata fra MET Norway.<br>
-    Appen er et hjelpemiddel, ikke fasit — kontroller alltid gjeldende regler
-    hos Fiskeridirektoratet. Ikke til navigasjon.</p>
+<!-- Hummerfiske Pro -->
+<section class="pro" id="pro" aria-labelledby="h-pro">
+  <div class="pro-tekst">
+    <h2 id="h-pro">Hummerfiske<span class="vh"> Pro</span><span class="pro-merke" aria-hidden="true">Pro</span></h2>
+    <p>Røkteklokka, sonene og reglene, hummermålet, kompasset, sanketeina, fangstloggen og sesongstatistikken er med for alle. Uten abonnement kan du ha fire teiner i sjøen og fem hummer i sanketeina.</p>
+    <p>Pro er et abonnement per måned eller år gjennom App Store. Med Pro får du</p>
+    <ul>
+      <li>så mange teiner og hummer i sanketeina du vil</li>
+      <li>bølgehøyde, vind og sjøtemperatur ved hver teine, fra MET Norway</li>
+      <li>dine beste fangstplasser på kartet, og hva som fisker best: agn, dybde og teinetype</li>
+      <li>varsel i bakgrunnen når båten nærmer seg en sone. Da må appen ha tilgang til posisjon «Alltid».</li>
+    </ul>
+  </div>
+  <figure class="vaerfig" aria-hidden="true">
+    <svg viewBox="-120 -120 240 240">
+      <circle class="stasjon" r="19"/>
+      <path class="vind" pathLength="1" d="M22.5 -13L77.9 -45M64 -43.8L77.9 -45L69.9 -33.5"/>
+    </svg>
+    <div class="bolger"><div class="bolgeband"><svg viewBox="0 0 240 30" preserveAspectRatio="none"><path d="M0 8c10 -8 20 -8 30 0s20 8 30 0s20 -8 30 0s20 8 30 0s20 -8 30 0s20 8 30 0s20 -8 30 0s20 8 30 0"/><path class="bb2" d="M-15 20c10 -8 20 -8 30 0s20 8 30 0s20 -8 30 0s20 8 30 0s20 -8 30 0s20 8 30 0s20 -8 30 0s20 8 30 0s20 -8 30 0"/></svg></div></div>
+    <span class="etk" style="left:60%; top:4%; --fs:1.3s"><b>5 m/s</b><small>vind</small></span>
+    <span class="etk" style="left:50%; top:74%; --fs:1.5s"><b>0,3 m</b><small>bølger</small></span>
+    <span class="etk" style="left:4%; top:22%; --fs:1.7s"><b>16°</b><small>i sjøen</small></span>
+    <figcaption>Sjø og vær ved Skjæret</figcaption>
+  </figure>
+</section>
 
-    <footer>
-      © 2026 Daniel Hellenes ·
-      <a href="/hummerfiske/personvern/">Personvern</a> ·
-      <a href="/hummerfiske/vilkar/">Vilkår</a>
-    </footer>
-  </section>
+<!-- Slutten -->
+<section class="slutt" aria-labelledby="h-slutt">
+  <div class="slutt-topp">
+    <img class="slutt-ikon" src="/hummerfiske/bilder/ikon-160.png" width="72" height="72" loading="lazy" decoding="async" alt="">
+    <h2 class="skitt" id="h-slutt">Skitt fiske.</h2>
+    <a class="appstore" href="https://apps.apple.com/no/app/hummerfiske/id6802721661?l=nb"><img src="/hummerfiske/appstore-merke.svg" width="168" height="56" loading="lazy" decoding="async" alt="Last ned Hummerfiske i App Store"></a>
+    <p>Laget av én person, på fritiden, for folk som setter teiner. Spørsmål, feil og forslag kan sendes til <a href="mailto:danielhellenes@me.com">danielhellenes@me.com</a>. Finner du en feil, kan du sende feilsøkingsloggen fra Innstillinger i appen. Den ligger bare på telefonen til du selv sender den.</p>
+    <nav class="om" aria-label="Om appen"><a href="personvern/">Personvern</a><a href="vilkar/">Vilkår</a></nav>
+  </div>
+</section>
 </main>
 
+<div class="kreditt-hus">
+<footer class="kreditt">
+  <p>Sjøkart og dybdedata ©&nbsp;Kartverket (CC&nbsp;BY&nbsp;4.0)&nbsp;· Fredningssoner og regelområder fra Fiskeridirektoratet (NLOD)&nbsp;· Vær- og bølgedata fra MET&nbsp;Norway</p>
+  <p>Appen er et hjelpemiddel, ikke fasit. Kontroller alltid gjeldende regler hos Fiskeridirektoratet. Ikke til navigasjon.</p>
+  <p>Kartet på denne siden er en illustrasjon. Fredningssonen i det er ekte: Sandvigdalsfjorden i Kristiansand, med holmene, slik Fiskeridirektoratet har tegnet den.</p>
+  <p>App Store er et varemerke for Apple Inc.</p>
+  <p class="versjon">Versjon 1.0.1&nbsp;· i App Store siden 15.09.2026&nbsp;· ©&nbsp;2026 Daniel Hellenes</p>
+</footer>
+</div>
+
 <script>
-  // Avdekking ved scroll, dybdemåleren, telefonen som følger musa og
-  // hummeren som vandrer inn i teina. Uten JS (eller med redusert
-  // bevegelse) er alt synlig fra start og ingenting avhenger av dette.
-  (function () {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    document.documentElement.classList.add('avdekk');
+/*
+ Alt som leser layout, skjer i maal(): ved oppstart, ved load og når
+ bredden endres. Løkka leser bare scrollY og skriver bare transform og
+ stroke-dashoffset (og teksten i brikken og telleren når den endres).
+ Den stopper når ingenting beveger seg. Feiler noe, står siden stille. */
+(function () {
+'use strict';
+var d = document.documentElement, W = window;
+var dod = false;
+function nodbrems(e) {
+  if (dod) return; dod = true;
+  d.classList.remove('js', 'bev', 'intro', 'intro-kort', 'vent', 'omslag');
+  d.classList.add('omslatt');
+  try { console.warn('Hummerfiske: skriptet stoppet, siden står stille.', e); } catch (x) {}
+}
+function vakt(fn) { return function () { if (dod) return; try { return fn.apply(this, arguments); } catch (e) { nodbrems(e); } }; }
 
-    // Tall som teller seg opp (sanketeina) når seksjonen kommer til syne
-    function tell(el) {
-      var til = parseInt(el.getAttribute('data-tell'), 10);
-      if (!til) return;
-      var start = null, varighet = 1100, forsinkelse = 350;
-      el.textContent = '0';
-      function steg(t) {
-        if (start === null) start = t;
-        var x = Math.min(1, (t - start - forsinkelse) / varighet);
-        if (x < 0) { requestAnimationFrame(steg); return; }
-        var e = 1 - Math.pow(1 - x, 3);
-        el.textContent = String(Math.round(e * til));
-        if (x < 1) requestAnimationFrame(steg);
-      }
-      requestAnimationFrame(steg);
-    }
-    // Avdekking: en seksjon vises når overkanten har kommet et stykke opp i
-    // vinduet, og den forblir vist. Sjekkes per scrollbilde, ikke med
-    // IntersectionObserver: en rask flikk på telefonen kan hoppe over en
-    // hel seksjon mellom to bilder, og da ville den aldri blitt avdekket.
-    var seksjoner = Array.prototype.slice.call(document.querySelectorAll('.seksjon, .bunn'));
-    function avdekk() {
-      if (!seksjoner.length) return;
-      var grense = window.innerHeight * 0.82;
-      seksjoner = seksjoner.filter(function (el) {
-        if (el.getBoundingClientRect().top > grense) return true;
-        el.classList.add('inn');
-        el.querySelectorAll('[data-tell]').forEach(tell);
-        return false;
-      });
-    }
+try {
+var $ = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+function klem(v, a, b) { return v < a ? a : v > b ? b : v; }
+function f1(v) { return Math.round(v * 10) / 10; }
+function har(k) { return d.classList.contains(k); }
+var NS = 'http://www.w3.org/2000/svg';
+function el(navn, att) { var e = document.createElementNS(NS, navn); for (var k in att) e.setAttribute(k, att[k]); return e; }
+function pos(e) { var x = 0, y = 0, n = e; while (n) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; } return [x, y]; }
+function midt(e) { var p = pos(e); return [p[0] + e.offsetWidth / 2, p[1] + e.offsetHeight / 2]; }
+function skriv(e, t) { if (e && e.textContent !== t) e.textContent = t; }
 
-    // Dybdemåleren: 0 m i overflaten, 34 m på bunnen. Bøya på tauet
-    // følger scrollen, tallet rundes til hele meter.
-    var maaler = document.querySelector('.dybdemaaler');
-    var tall = maaler.querySelector('.dm-tall');
-    var markor = maaler.querySelector('.dm-markor');
-    var ventet = false, forrigeMeter = -1;
-    function vedScroll() {
-      ventet = false;
-      avdekk();
-      var maks = document.documentElement.scrollHeight - window.innerHeight;
-      var p = maks > 0 ? Math.min(1, Math.max(0, window.scrollY / maks)) : 0;
-      var meter = Math.round(p * 34);
-      if (meter !== forrigeMeter) { forrigeMeter = meter; tall.textContent = meter + ' m'; }
-      markor.style.transform = 'translateY(' + (p * 150).toFixed(1) + 'px)';
-      maaler.classList.toggle('vis', p > 0.03 && p < 0.985);
-      // Overflaten settes på pause når den er ute av syne
-      document.documentElement.classList.toggle('dypt', window.scrollY > window.innerHeight * 1.4);
-    }
-    window.addEventListener('scroll', function () {
-      if (!ventet) { ventet = true; requestAnimationFrame(vedScroll); }
-    }, { passive: true });
-    window.addEventListener('resize', vedScroll);
-    vedScroll();
+/* 1. Tid i norsk tid, uansett hvor nettleseren står */
+var DOGN = 864e5;
+var UKE = ['søndag', 'mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lørdag'];
+var MND = ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'];
+var fmt = null;
+try {
+  fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Oslo', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' });
+  if (!fmt.formatToParts) fmt = null;
+} catch (e) { fmt = null; }
+function oslo(ms) {
+  var p = {}, deler = fmt.formatToParts(new Date(ms));
+  for (var i = 0; i < deler.length; i++) p[deler[i].type] = deler[i].value;
+  return { y: +p.year, mo: +p.month, d: +p.day, h: +p.hour % 24, mi: +p.minute };
+}
+function ukedag(p) { return new Date(Date.UTC(p.y, p.mo - 1, p.d)).getUTCDay(); }
+function dagNr(ms) { var p = oslo(ms); return Math.round(Date.UTC(p.y, p.mo - 1, p.d) / DOGN); }
+function avvik(ms) { var p = oslo(ms); return Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi) - Math.floor(ms / 6e4) * 6e4; }
+function osloMs(y, mo, dag, h, mi) { var gjett = Date.UTC(y, mo - 1, dag, h, mi); var t = gjett - avvik(gjett); return gjett - avvik(t); }
+var to2 = function (x) { return (x < 10 ? '0' : '') + x; };
+var NB = ' ';
+function datoLang(ms) { var p = oslo(ms); return UKE[ukedag(p)] + ' ' + p.d + '.' + NB + MND[p.mo - 1] + ' kl.' + NB + to2(p.h) + '.' + to2(p.mi); }
 
-    // Telefonen i heroen vipper svakt etter musa, bare der det finnes en mus
-    var hero = document.querySelector('.overflate');
-    var tlf = document.querySelector('.hero-telefon .telefon-3d');
-    if (tlf && matchMedia('(hover: hover) and (pointer: fine)').matches) {
-      hero.addEventListener('pointermove', function (e) {
-        var r = hero.getBoundingClientRect();
-        var x = (e.clientX - r.left) / r.width - 0.5;
-        var y = (e.clientY - r.top) / r.height - 0.5;
-        tlf.style.setProperty('--ry', (x * 12).toFixed(2) + 'deg');
-        tlf.style.setProperty('--rx', (-y * 9).toFixed(2) + 'deg');
-      });
-      hero.addEventListener('pointerleave', function () {
-        tlf.style.setProperty('--ry', '0deg');
-        tlf.style.setProperty('--rx', '0deg');
-      });
+var naaEl = $('#naa'), sesongEl = $('#sesong-naa'), kalLes = $('.kal-les'), kalTall = $('#kal-tall'), kalTekst = $('#kal-tekst'), idagEl = $('#idag'), bm1 = $('#bm1'), bm2 = $('#bm2');
+function regn() {
+  if (!fmt) return;
+  var naa = Date.now(), p = oslo(naa), y = p.y;
+  var apner = osloMs(y, 10, 1, 8, 0), sor = osloMs(y, 12, 1, 0, 0), nord = osloMs(y + 1, 1, 1, 0, 0);
+  var tilstand = naa < apner ? 'for' : naa < sor ? 'apen' : 'nord';
+  var idag = dagNr(naa), igjenSor = dagNr(sor) - idag, igjenNord = dagNr(nord) - idag;
+  var frist = naa + 7 * DOGN, okt1 = p.mo === 10 && p.d === 1;
+  var t, s = '';
+  if (tilstand === 'for') t = okt1 ? 'Hummersesongen åpner i dag kl.' + NB + '08.00.' : 'Hummersesongen åpner ' + UKE[ukedag({ y: y, mo: 10, d: 1 })] + ' 1.' + NB + 'oktober kl.' + NB + '08.00.';
+  else if (tilstand === 'apen') t = 'Setter du en teine nå, er fristen ' + datoLang(frist) + '.' + (frist >= sor ? ' Sør for fylkesgrensa varer sesongen bare ut november.' : '');
+  else t = 'Nord for fylkesgrensa varer sesongen ut desember. ' + (frist < nord ? 'Setter du en teine der nå, er fristen ' + datoLang(frist) + '.' : 'Sør for grensa er den over.');
+  skriv(naaEl, t);
+  if (tilstand === 'apen') s = igjenSor >= 2 ? 'I dag er den åpen: ' + igjenSor + ' dager igjen sør for grensa, ' + igjenNord + ' nord for den.' : 'I dag er siste dag sør for grensa. Nord for den er det ' + igjenNord + ' dager igjen.';
+  else if (tilstand === 'for' && okt1) s = 'Den åpner i dag kl.' + NB + '08.00.';
+  else if (tilstand === 'nord') s = igjenNord >= 2 ? 'Sør for grensa er den over. Nord for grensa er det ' + igjenNord + ' dager igjen.' : 'Sør for grensa er den over. Nord for grensa er i dag siste dag.';
+  skriv(sesongEl, s);
+  // Bøya i helten: utenfor sesongen er ingen teine satt
+  skriv(bm1, tilstand === 'for' ? 'åpner' : 'satt nå');
+  skriv(bm2, tilstand === 'for' ? '1.' + NB + 'okt' : tilstand === 'nord' && frist >= nord ? 'til 31.' + NB + 'des' : '7 d');
+  d.classList.toggle('for-sesong', tilstand === 'for');
+  if (sesongEl.hidden !== !s) sesongEl.hidden = !s;
+  // Kalenderen: streken for i dag og dager til tømming, 1. oktober til 31. desember
+  var iSesong = tilstand !== 'for';
+  if (iSesong) {
+    var dagI = idag - dagNr(osloMs(y, 10, 1, 12, 0));
+    var x = klem((dagI + (p.h + p.mi / 60) / 24) / 92 * 100, 0, 100).toFixed(2) + '%';
+    if (idagEl.style.left !== x) idagEl.style.left = x;
+    skriv(kalTall, String(igjenNord));
+    skriv(kalTekst, igjenNord === 1 ? 'dag til tømming' : 'dager til tømming');
+  } else {
+    skriv(kalTall, '31.' + NB + 'desember');
+    skriv(kalTekst, 'er tømmefristen for sanketeina');
+  }
+  idagEl.classList.toggle('vis', iSesong);
+  kalLes.classList.toggle('reserve', !iSesong);
+}
+
+/* 2. Modus */
+var rolig = W.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+var bev = har('bev');
+function modus() {
+  var h = W.innerHeight, skal = !rolig.matches && h >= 420 && h <= 2200;
+  if (skal === bev) return;
+  bev = skal;
+  if (!skal) { d.classList.remove('bev', 'intro', 'intro-kort', 'vent', 'omslag'); introFerdig = true; }
+  else d.classList.add('bev');
+  d.classList.add('omslatt'); omslagt = true;
+}
+
+/* 3. Introen og omslaget */
+var introFerdig = !har('intro') && !har('intro-kort');
+var omslagt = har('omslatt'), venter = false, maxDl = 2600;
+function introSlutt() {
+  d.classList.remove('intro', 'intro-kort', 'vent');
+  introFerdig = true;
+  if (venter || W.scrollY > 4) omslag();
+}
+if (har('intro')) {
+  var dor = $('.dor'), lost = false;
+  var los = function (kort) {
+    if (lost || !har('intro')) return; lost = true;
+    if (kort) { d.classList.remove('intro'); d.classList.add('intro-kort'); }
+    d.classList.remove('vent');
+    setTimeout(vakt(introSlutt), kort ? 950 : 2400);
+  };
+  setTimeout(vakt(function () { los(true); }), Math.max(0, 700 - ((W.performance ? performance.now() : 0) - (W.hfT0 || 0))));
+  if (dor.decode) dor.decode().then(vakt(function () { los(false); }), vakt(function () { los(true); }));
+  else if (dor.complete) los(false);
+  else dor.addEventListener('load', vakt(function () { los(false); }));
+} else if (har('intro-kort')) setTimeout(vakt(introSlutt), 950);
+
+function omslag() {
+  if (omslagt || !bev) return;
+  if (!introFerdig) { venter = true; return; }
+  omslagt = true;
+  d.classList.add('omslag');
+  setTimeout(vakt(function () { d.classList.add('omslatt'); }), 2100);
+  setTimeout(vakt(function () { d.classList.remove('omslag'); }), maxDl + 600);
+  start();
+}
+
+/* 4. Ruta: punkter fra layouten, glattet */
+var R = null, VH = 0, H = 0, mobil = true, leia = 24;
+function byggRute() {
+  var P = [];
+  var st = midt($('[data-rute="start"]'));
+  P.push({ x: st[0], y: st[1], t: 'start' });
+  $$('.stopp').forEach(function (sek, si) {
+    if (mobil) {
+      var tx = $('.tekst', sek), tp = pos(tx);
+      P.push({ x: leia, y: tp[1] - 8, t: 'vei', sek: si, leia: 1 });
+      P.push({ x: leia, y: tp[1] + tx.offsetHeight + 4, t: 'vei', sek: si, leia: 1 });
     }
-  })();
+    $$('[data-rute]', sek).forEach(function (e) {
+      if (!e.offsetParent) return;
+      var m = midt(e), lp = e.hasAttribute('data-leia');
+      if (lp) m[0] = leia;
+      P.push({ x: m[0], y: m[1], t: e.getAttribute('data-rute'), el: e, sek: si, leia: lp, sakte: e.getAttribute('data-sakte'), nokkel: e.hasAttribute('data-nokkel') || e.getAttribute('data-rute') === 'boye' });
+    });
+  });
+  // Mellom to punkter i leia går båten rett ned. To hjelpepunkter 40 px inn
+  // fra hver ende holder kurven loddrett, så den ikke slår ut mot kanten.
+  var Q = [];
+  P.forEach(function (a, k) {
+    var b = P[k + 1];
+    Q.push(a);
+    if (b && a.leia && b.leia && b.y - a.y > 120) Q.push({ x: leia, y: a.y + 40, t: 'vei', sek: a.sek }, { x: leia, y: b.y - 40, t: 'vei', sek: b.sek });
+  });
+  P = Q;
+  // Båtens midtpunkt holdes minst 22 px fra kanten
+  var kx0 = 22, kx1 = d.clientWidth - 22;
+  var xs = [], ys = [], cum = [], L = 0;
+  function leggTil(x, y) {
+    x = klem(x, kx0, kx1);
+    if (xs.length) L += Math.hypot(x - xs[xs.length - 1], y - ys[ys.length - 1]);
+    xs.push(x); ys.push(y); cum.push(L);
+  }
+  // Sentripetal Catmull-Rom, samplet omtrent hver 3. piksel
+  for (var k = 0; k < P.length - 1; k++) {
+    var p0 = P[k - 1] || P[k], p1 = P[k], p2 = P[k + 1], p3 = P[k + 2] || P[k + 1];
+    var t0 = 0, t1 = t0 + Math.pow(Math.hypot(p1.x - p0.x, p1.y - p0.y), .5) + 1e-3;
+    var t2 = t1 + Math.pow(Math.hypot(p2.x - p1.x, p2.y - p1.y), .5) + 1e-3;
+    var t3 = t2 + Math.pow(Math.hypot(p3.x - p2.x, p3.y - p2.y), .5) + 1e-3;
+    p1.s = L;
+    var n = Math.max(2, Math.ceil(Math.hypot(p2.x - p1.x, p2.y - p1.y) / 3));
+    for (var q = 0; q < n; q++) {
+      var tt = t1 + (t2 - t1) * q / n;
+      var a1x = (t1 - tt) / (t1 - t0) * p0.x + (tt - t0) / (t1 - t0) * p1.x, a1y = (t1 - tt) / (t1 - t0) * p0.y + (tt - t0) / (t1 - t0) * p1.y;
+      var a2x = (t2 - tt) / (t2 - t1) * p1.x + (tt - t1) / (t2 - t1) * p2.x, a2y = (t2 - tt) / (t2 - t1) * p1.y + (tt - t1) / (t2 - t1) * p2.y;
+      var a3x = (t3 - tt) / (t3 - t2) * p2.x + (tt - t2) / (t3 - t2) * p3.x, a3y = (t3 - tt) / (t3 - t2) * p2.y + (tt - t2) / (t3 - t2) * p3.y;
+      var b1x = (t2 - tt) / (t2 - t0) * a1x + (tt - t0) / (t2 - t0) * a2x, b1y = (t2 - tt) / (t2 - t0) * a1y + (tt - t0) / (t2 - t0) * a2y;
+      var b2x = (t3 - tt) / (t3 - t1) * a2x + (tt - t1) / (t3 - t1) * a3x, b2y = (t3 - tt) / (t3 - t1) * a2y + (tt - t1) / (t3 - t1) * a3y;
+      leggTil((t2 - tt) / (t2 - t1) * b1x + (tt - t1) / (t2 - t1) * b2x, (t2 - tt) / (t2 - t1) * b1y + (tt - t1) / (t2 - t1) * b2y);
+    }
+  }
+  var siste = P[P.length - 1]; leggTil(siste.x, siste.y); siste.s = L;
+  R = { P: P, xs: new Float32Array(xs), ys: new Float32Array(ys), cum: new Float32Array(cum), L: L };
+}
+function indeks(s) {
+  var c = R.cum, lo = 0, hi = c.length - 1;
+  if (s <= 0) return 0; if (s >= R.L) return hi - 1e-6;
+  while (hi - lo > 1) { var m = (lo + hi) >> 1; if (c[m] <= s) lo = m; else hi = m; }
+  return lo + (s - c[lo]) / Math.max(1e-6, c[hi] - c[lo]);
+}
+function punkt(s) {
+  var f = indeks(s), i = Math.floor(f), r = f - i, j = Math.min(i + 1, R.xs.length - 1);
+  return [R.xs[i] + (R.xs[j] - R.xs[i]) * r, R.ys[i] + (R.ys[j] - R.ys[i]) * r];
+}
+function kurs(s) {
+  var fram = punkt(s + 7), bak = punkt(s - 7);
+  return Math.hypot(fram[0] - bak[0], fram[1] - bak[1]) > 2 ? Math.atan2(fram[0] - bak[0], -(fram[1] - bak[1])) * 180 / Math.PI : null;
+}
+
+/* 5. Kjølvannet: én sti per etappe */
+var kjol = $('.kjol'), etapper = [], boyer = [];
+function byggKjol() {
+  kjol.textContent = '';
+  kjol.style.height = H + 'px';
+  var W0 = d.clientWidth;
+  var plan = el('svg', { width: W0, height: H, viewBox: '0 0 ' + W0 + ' ' + H, style: 'left:0;top:0' });
+  var dPlan = 'M' + f1(R.xs[0]) + ' ' + f1(R.ys[0]);
+  for (var i = 1; i < R.xs.length; i += 2) dPlan += 'L' + f1(R.xs[i]) + ' ' + f1(R.ys[i]);
+  plan.appendChild(el('path', { 'class': 'plan', d: dPlan }));
+  kjol.appendChild(plan);
+  var kutt = [0];
+  R.P.forEach(function (p) { if (p.t === 'boye' || p.t === 'hvil') kutt.push(p.s); });
+  kutt.push(R.L);
+  etapper = [];
+  for (var k = 0; k < kutt.length - 1; k++) {
+    var s0 = kutt[k], s1 = kutt[k + 1]; if (s1 - s0 < 1) continue;
+    var i0 = Math.floor(indeks(s0)), i1 = Math.min(R.xs.length - 1, Math.ceil(indeks(s1)));
+    var minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9, q;
+    for (q = i0; q <= i1; q++) { minx = Math.min(minx, R.xs[q]); maxx = Math.max(maxx, R.xs[q]); miny = Math.min(miny, R.ys[q]); maxy = Math.max(maxy, R.ys[q]); }
+    minx -= 8; miny -= 8; maxx += 8; maxy += 8;
+    var sv = el('svg', { width: f1(maxx - minx), height: f1(maxy - miny), viewBox: f1(minx) + ' ' + f1(miny) + ' ' + f1(maxx - minx) + ' ' + f1(maxy - miny), style: 'left:' + f1(minx) + 'px;top:' + f1(miny) + 'px' });
+    var dd = 'M' + f1(R.xs[i0]) + ' ' + f1(R.ys[i0]), len = 0;
+    for (q = i0 + 1; q <= i1; q++) { dd += 'L' + f1(R.xs[q]) + ' ' + f1(R.ys[q]); len += Math.hypot(R.xs[q] - R.xs[q - 1], R.ys[q] - R.ys[q - 1]); }
+    var sti = el('path', { 'class': 'spor', d: dd });
+    sti.style.strokeDasharray = f1(len) + ' ' + f1(len + 20); sti.style.strokeDashoffset = f1(len);
+    sv.appendChild(sti); kjol.appendChild(sv);
+    etapper.push({ s0: R.cum[i0], len: len, sti: sti, vist: -1 });
+  }
+  // Bøyene: egen plass på ruta, eller nærmeste punkt for dem som ligger ved siden av
+  boyer = $$('.boye').map(function (b) {
+    var p = null; R.P.forEach(function (q) { if (q.el === b) p = q; });
+    var s = p ? p.s : 0;
+    if (!p) {
+      var m = midt(b), best = 1e12;
+      for (var i = 0; i < R.xs.length; i++) { var dd2 = (R.xs[i] - m[0]) * (R.xs[i] - m[0]) + (R.ys[i] - m[1]) * (R.ys[i] - m[1]); if (dd2 < best) { best = dd2; s = R.cum[i]; } }
+    }
+    return { el: b, s: s, passert: b.classList.contains('passert') };
+  });
+}
+
+/* 6. Nøklene: hvor båten skal være ved hver rulleposisjon
+   Båten ligger ved hvert hvil fra K - 0,10 VH til K + 0,16 VH (K = punktets y - 0,58 VH),
+   og går mellom nøklene. Bøyer og merkede punkter er nøkler den passerer uten å ligge.
+   Gjennom fredningssonen går den sakte: inngangen er nøkkel 0,32 VH tidligere og
+   utgangen 0,18 VH senere, så brikken står på «I fredningssone» en stund. */
+var nokler = [];
+function byggNokler() {
+  nokler = [[0, 0, 1], [VH * .05, 0, 1]];
+  function legg(y, s, hvil) { var f = nokler[nokler.length - 1]; if (y <= f[0]) y = f[0] + 1; nokler.push([y, s, hvil]); }
+  R.P.forEach(function (p) {
+    if (p.t === 'hvil' || p.t === 'slutt') {
+      var K = p.y - VH * .58;
+      legg(K - VH * .1, p.s, 1);
+      if (p.t === 'hvil') legg(K + VH * .16, p.s, 1);
+    } else if (p.nokkel || p.sakte) legg(p.y - VH * (p.sakte === 'inn' ? .9 : p.sakte === 'ut' ? .4 : .58), p.s, 0);
+  });
+}
+function maalS(y) {
+  for (var i = 1; i < nokler.length; i++) {
+    if (y <= nokler[i][0]) {
+      var a = nokler[i - 1], b = nokler[i], t = klem((y - a[0]) / Math.max(1, b[0] - a[0]), 0, 1);
+      if (a[2] && b[2]) t = t * t * (3 - 2 * t);
+      else if (a[2]) t = t * t;
+      else if (b[2]) t = 1 - (1 - t) * (1 - t);
+      return a[1] + (b[1] - a[1]) * t;
+    }
+  }
+  return nokler[nokler.length - 1][1];
+}
+
+/* 7. Sonen: er båten inne eller ute? */
+var sone = null, brikke = $('.sonebrikke');
+function maalSone() {
+  var fig = $('.sonefig'), svg = $('svg', fig);
+  var p = pos(fig), k = fig.offsetWidth / 2880;
+  var pk = JSON.parse(svg.getAttribute('data-sone')).map(function (q) { return [p[0] + q[0] * k, p[1] + q[1] * k]; });
+  var s0 = 1e9, s1 = -1;
+  R.P.forEach(function (q) { if (q.sek === 0) { s0 = Math.min(s0, q.s); s1 = Math.max(s1, q.s); } });
+  sone = { pk: pk, s0: s0, s1: s1, inne: brikke.classList.contains('i-sone') };
+}
+function inne(x, y) {
+  var pk = sone.pk, inn = false;
+  for (var i = 0, j = pk.length - 1; i < pk.length; j = i++) {
+    var ax = pk[j][0], ay = pk[j][1], bx = pk[i][0], by = pk[i][1];
+    if (((by > y) !== (ay > y)) && (x < (ax - bx) * (y - by) / (ay - by) + bx)) inn = !inn;
+  }
+  return inn;
+}
+
+/* 8. Hummertelleren: 0 til 95 med stavens kurve */
+function bezier(x1, y1, x2, y2) {
+  var cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  return function (x) {
+    var t = x;
+    for (var i = 0; i < 8; i++) { var e = ((ax * t + bx) * t + cx) * t - x, dx = (3 * ax * t + 2 * bx) * t + cx; if (Math.abs(e) < 1e-5 || !dx) break; t = klem(t - e / dx, 0, 1); }
+    return ((ay * t + by) * t + cy) * t;
+  };
+}
+var utKurve = bezier(.22, 1, .36, 1);
+var teller = { tall: $('.dom .tall'), dom: $('.dom'), ord: $('.dom .dom-ord'), t0: 0, aktiv: false, sist: 95, lov: true };
+function settTeller(v) {
+  if (v === teller.sist) return;
+  teller.sist = v; teller.tall.textContent = v;
+  var lov = v >= 90;
+  if (lov !== teller.lov) { teller.lov = lov; teller.dom.classList.toggle('under', !lov); teller.ord.textContent = lov ? 'lovlig' : 'under minstemålet'; }
+}
+if (bev) settTeller(0);
+function startTeller() { if (!bev) return; teller.t0 = performance.now() + 1500; teller.aktiv = true; start(); }
+
+/* 9. Telefonene: parallakse bare fra 900 px */
+var tlf = [];
+function maalTlf() {
+  tlf = mobil ? [] : $$('.tlf[data-dybde]').map(function (e) { var m = midt(e); return { el: e, c: m[1], k: +e.getAttribute('data-dybde'), v: null }; });
+  if (mobil) $$('.tlf').forEach(function (e) { e.style.transform = ''; });
+}
+
+/* 10. Løkka: den eneste */
+var baatEl = $('.baat'), cur = 0, vinkel = 180, kjorer = false, sist = 0, tilstand = 'ligger';
+function tikk(t) {
+  kjorer = false;
+  if (dod || !R) return;
+  var dt = sist ? Math.min(64, t - sist) : 16; sist = t;
+  var sy = W.scrollY;
+  var mal = bev ? maalS(sy) : R.L;
+  if (bev) { cur += (mal - cur) * (1 - Math.exp(-dt / 210)); if (Math.abs(mal - cur) < .3) cur = mal; }
+  else cur = mal;
+  var p = punkt(cur), mv = kurs(cur);
+  if (mv !== null) { var diff = ((mv - vinkel + 540) % 360) - 180; vinkel += diff * (bev ? 1 - Math.exp(-dt / 120) : 1); }
+  baatEl.style.transform = 'translate3d(' + f1(p[0]) + 'px,' + f1(p[1]) + 'px,0) rotate(' + f1(vinkel) + 'deg)';
+  var ny = Math.abs(mal - cur) > 3 ? 'gaar' : 'ligger';
+  if (ny !== tilstand) { baatEl.classList.remove(tilstand); baatEl.classList.add(ny); tilstand = ny; }
+  for (var i = 0; i < etapper.length; i++) {
+    var e = etapper[i], vis = klem(cur - e.s0, 0, e.len);
+    if (Math.abs(vis - e.vist) > .4 || (vis !== e.vist && (vis === 0 || vis === e.len))) { e.vist = vis; e.sti.style.strokeDashoffset = f1(e.len - vis); }
+  }
+  for (i = 0; i < boyer.length; i++) {
+    var b = boyer[i];
+    if (!b.passert && cur >= b.s - .5) { b.passert = true; b.el.classList.add('passert'); }
+  }
+  if (sone && cur > sone.s0 - 40 && cur < sone.s1 + 40) {
+    var inn = inne(p[0], p[1]);
+    if (inn !== sone.inne) { sone.inne = inn; brikke.classList.toggle('i-sone', inn); }
+  }
+  if (tlf.length) {
+    var midtY = sy + VH / 2;
+    for (i = 0; i < tlf.length; i++) {
+      var tf = tlf[i], av = tf.c - midtY;
+      if (Math.abs(av) > VH * 1.4) continue;
+      var v = bev ? Math.round(av * tf.k) : 0;
+      if (v !== tf.v) { tf.v = v; tf.el.style.transform = 'translate3d(0,' + v + 'px,0)'; }
+    }
+  }
+  var mer = cur !== mal;
+  if (teller.aktiv) {
+    var u = (t - teller.t0) / 1300;
+    if (u >= 0) { settTeller(Math.round(95 * utKurve(klem(u, 0, 1)))); if (u >= 1) teller.aktiv = false; }
+    mer = true;
+  }
+  if (mer) start(); else sist = 0;
+}
+function start() { if (!kjorer && !dod) { kjorer = true; requestAnimationFrame(vakt(tikk)); } }
+
+/* 11. Alle målinger på ett sted */
+var sistBredde = -1, sistH = 0, havnTekst = $$('.havn text, .lodd-boye text');
+function maal() {
+  modus();
+  var B = d.clientWidth;
+  if (B !== sistBredde) d.style.setProperty('--vhl', W.innerHeight / 100 + 'px');
+  VH = W.innerHeight; mobil = W.innerWidth < 900; leia = W.innerWidth < 360 ? 22 : 24;
+  // Fra 560 px er feltet 640 px bredt og sentrert: leia går like utenfor feltet, nærmere teksten
+  if (mobil && W.innerWidth >= 560) leia = Math.max(24, pos($('.felt'))[0] - 20);
+  var holder = $('.holder'), S = holder.offsetWidth, hp = pos(holder);
+  d.style.setProperty('--k', (23 / (S * .15)).toFixed(4));
+  // Ekkoloddet: hvert loddskudd kommer fram etter avstanden fra bøya
+  if (!omslagt && havnTekst.length) {
+    var bx = hp[0] + S / 2, by = hp[1] + S * .1626, sy0 = W.scrollY, dl = [];
+    havnTekst.forEach(function (tx) { var r = tx.getBoundingClientRect(); dl.push(1000 + Math.hypot(r.left + r.width / 2 - bx, r.top + sy0 + r.height / 2 - by) / .52); });
+    maxDl = 0;
+    havnTekst.forEach(function (tx, i) { maxDl = Math.max(maxDl, dl[i]); tx.style.setProperty('--dl', Math.round(dl[i]) + 'ms'); });
+    maxDl += 500;
+  }
+  var kort = $('.rokt .varsel'); kort.parentNode.style.setProperty('--kh', kort.offsetHeight + 10 + 'px');
+  H = Math.max(document.body.scrollHeight, d.scrollHeight);
+  byggRute();
+  maalSone();
+  maalTlf();
+  byggKjol();
+  byggNokler();
+  sistBredde = B; sistH = H;
+  cur = bev ? maalS(W.scrollY) : R.L;
+  var k0 = kurs(cur); vinkel = k0 === null ? 180 : k0;
+  for (var i = 0; i < etapper.length; i++) etapper[i].vist = -1;
+  sist = 0;
+  start();
+}
+
+/* 12. Innsyn og pause */
+var innsyn = $$('.tekst, .felt, .figur, .pro-tekst, .vaerfig, .slutt-topp');
+if ('IntersectionObserver' in W && bev) {
+  var io = new IntersectionObserver(vakt(function (ents) {
+    ents.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      en.target.classList.add('inn'); io.unobserve(en.target);
+      if (en.target.querySelector('.hummer')) startTeller();
+    });
+  }), { rootMargin: '0px 0px -14% 0px' });
+  innsyn.forEach(function (e) { io.observe(e); });
+  var io2 = new IntersectionObserver(vakt(function (ents) {
+    ents.forEach(function (en) { en.target.classList.toggle('paus', !en.isIntersecting); });
+  }));
+  $$('.helt, .vaerfig, .baat').forEach(function (e) { io2.observe(e); });
+} else innsyn.forEach(function (e) { e.classList.add('inn'); });
+
+/* 13. Hendelser */
+regn();
+maal();
+W.addEventListener('scroll', vakt(function () { if (!omslagt && W.scrollY > 4) omslag(); start(); }), { passive: true });
+var ro = 0;
+W.addEventListener('resize', vakt(function () {
+  clearTimeout(ro);
+  ro = setTimeout(vakt(function () {
+    var h = W.innerHeight, skal = !rolig.matches && h >= 420 && h <= 2200;
+    if (d.clientWidth !== sistBredde || skal !== bev) maal();
+    else { VH = h; byggNokler(); start(); }
+  }), 160);
+}));
+W.addEventListener('load', vakt(function () {
+  // Safari kan gjenopprette rulleposisjonen etter første maling: da hoppes introen over
+  if (!omslagt && W.scrollY > VH * .5) { d.classList.remove('intro', 'intro-kort', 'vent'); introFerdig = true; d.classList.add('omslatt'); omslagt = true; }
+  var h = Math.max(document.body.scrollHeight, d.scrollHeight);
+  if (Math.abs(h - sistH) > 4) maal();
+}));
+if (rolig.addEventListener) rolig.addEventListener('change', vakt(maal));
+// Tiden: hvert nytt minutt, når fanen blir synlig igjen og etter bfcache
+var minutt = function () { if (!document.hidden) regn(); setTimeout(vakt(minutt), 60000 - Date.now() % 60000 + 40); };
+setTimeout(vakt(minutt), 60000 - Date.now() % 60000 + 40);
+document.addEventListener('visibilitychange', vakt(function () { if (!document.hidden) regn(); }));
+W.addEventListener('pageshow', vakt(function (e) { if (e.persisted) { regn(); maal(); } }));
+
+d.classList.add('i-gang');
+} catch (e) { nodbrems(e); }
+})();
 </script>
-
 </body>
 </html>

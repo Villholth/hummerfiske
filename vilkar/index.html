@@ -2,187 +2,260 @@
 <html lang="nb">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vilkår — Hummerfiske</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vilkår · Hummerfiske</title>
 <meta name="description" content="Bruksvilkår for Hummerfiske-appen: hva appen er, hva den ikke er, abonnement og ansvar.">
-<meta property="og:title" content="Vilkår — Hummerfiske">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0D2E4C">
+<meta property="og:title" content="Vilkår · Hummerfiske">
 <meta property="og:description" content="Bruksvilkår for Hummerfiske-appen: hva appen er, hva den ikke er, abonnement og ansvar.">
-<meta property="og:image" content="https://villholth.github.io/hummerfiske/og-bilde.png">
+<meta property="og:image" content="https://villholth.github.io/hummerfiske/bilder/og-bilde.jpg">
 <meta property="og:url" content="https://villholth.github.io/hummerfiske/vilkar/">
-<link rel="icon" href="/hummerfiske/ikon.png">
-<link rel="apple-touch-icon" href="/hummerfiske/ikon.png">
+<link rel="icon" href="/hummerfiske/bilder/ikon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/hummerfiske/bilder/ikon-64.png" sizes="64x64" type="image/png">
+<link rel="apple-touch-icon" href="/hummerfiske/bilder/ikon-180.png">
+<script>
+  // Før første maling. js: skriptet kjører. bev: siden får bevege seg.
+  // Undersidene har ingen intro, bare figuren og toppen som kommer fram.
+  (function () {
+    var d = document.documentElement, h = window.innerHeight, rolig = false;
+    d.classList.add('js');
+    try { rolig = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    if (rolig || h < 420 || h > 2200) return;
+    d.classList.add('bev');
+    // Nødbrems: kommer ikke siden i gang, står alt stille og ferdig.
+    setTimeout(function () { if (!d.classList.contains('i-gang')) d.classList.remove('bev'); }, 2500);
+  })();
+</script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* Vilkår · et blad av det samme sjøkartet som forsiden. Kartfliken
+     tegnes inn én gang og bærer sjøkartets merknad: ikke til navigasjon.
+     Ingenting følger rullingen. Bare transform, opacity og
+     stroke-dashoffset beveger seg. */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --himmel: #2F6F9F; --sjo-1: #1A4A72; --sjo-2: #0D2E4C; --sjo-3: #0A2440;
-    --bunn: #06192C; --skum: #F4F9FC; --korall: #FF9C8C; --rav: #F4C978;
-    --gronn: #8FDCB2; --tekst: #F4F9FC; --tekst2: rgba(244,249,252,.78);
-    --tekst3: rgba(244,249,252,.55); --glass: rgba(244,249,252,.06);
-    --glasskant: rgba(244,249,252,.12);
+    color-scheme: dark;
+    --hav: #0D2E4C; --hav-topp: #123A5E; --hav-bunn: #092641; --land: #2B4D69;
+    --skum: #F4F9FC; --tekst2: rgba(244,249,252,.82); --tekst3: rgba(244,249,252,.66);
+    --linje: rgba(244,249,252,.8); --lodd: rgba(168,208,236,.66);
+    --ok: #8FDCB2; --gul: #F4C978; --fare: #FF9C8C;
+    --rund: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+    --serif: ui-serif, "New York", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ut: cubic-bezier(.22, 1, .36, 1);
+    --inn-ut: cubic-bezier(.65, 0, .35, 1);
+    --fjaer: cubic-bezier(.3, 1.6, .45, 1);
+    --synk: cubic-bezier(.5, 0, .75, 0);
+    --pol: 20px; --kant: 0px;
   }
-  html { scroll-behavior: smooth; }
+  html { -webkit-text-size-adjust: 100%; overflow-x: hidden; background: var(--hav); }
+  @supports (overflow: clip) { html { overflow-x: clip; } }
   body {
-    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
-    color: var(--tekst); line-height: 1.65; overflow-x: hidden;
-    /* Samme vannsøyle som forsiden, bare kortere: lyst øverst, mørkt nederst */
-    background: linear-gradient(180deg,
-      var(--himmel) 0, var(--sjo-1) 420px, var(--sjo-2) 1400px,
-      var(--sjo-3) 2400px, var(--bunn) 100%);
+    position: relative; overflow-x: hidden;
+    font: 17px/1.6 var(--sans); color: var(--skum);
+    background: var(--hav) linear-gradient(180deg, var(--hav-topp) 0, var(--hav) 1400px, var(--hav) 62%, var(--hav-bunn) 100%);
   }
-  h1, h2, h3 {
-    font-family: ui-rounded, -apple-system, system-ui, sans-serif;
-    letter-spacing: -.015em;
+  @supports (overflow: clip) { body { overflow-x: clip; } }
+  ::selection { background: #F4C978; color: #0D2E4C; }
+  img { display: block; max-width: 100%; height: auto; }
+  a { color: var(--skum); text-decoration-thickness: 1px; text-underline-offset: .18em; }
+  a:focus-visible, .hopp:focus { outline: 2px solid var(--skum); outline-offset: 4px; border-radius: 4px; }
+  .hopp {
+    position: absolute; left: 12px; top: -60px; z-index: 50;
+    background: var(--skum); color: var(--hav); padding: 10px 16px; border-radius: 10px;
+    font-weight: 650; text-decoration: none;
   }
-  a { color: var(--korall); }
-  a:focus-visible { outline: 2px solid var(--skum); outline-offset: 3px; }
+  .hopp:focus { top: 12px; }
 
-  /* Overflaten: sol, vannlinjer og bølgekanten fra forsiden, i miniatyr */
-  .overflate {
-    position: relative; overflow: hidden; text-align: center;
-    padding: 52px 24px 96px;
-  }
-  .scene { position: absolute; inset: 0; pointer-events: none; }
-  .solglod {
-    position: absolute; left: 50%; top: -140px; width: 420px; height: 420px;
-    transform: translateX(-50%); border-radius: 50%;
-    background: radial-gradient(circle, rgba(244,201,120,.35) 0, rgba(244,201,120,0) 62%);
-  }
-  .vannlinje { position: absolute; left: -10%; width: 120%; height: 26px; opacity: .6; }
-  .vannlinje svg { width: 100%; height: 100%; display: block; }
-  .vl-1 { bottom: 54px; animation: gli 9s ease-in-out infinite alternate; }
-  .vl-2 { bottom: 38px; opacity: .35; animation: gli 12s ease-in-out -4s infinite alternate; }
-  @keyframes gli { from { transform: translateX(-2%); } to { transform: translateX(2%); } }
-  .sjo { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; overflow: hidden; }
-  .sjo svg {
-    position: absolute; bottom: 0; left: 0; width: 200%; height: 100%; display: block;
-    animation: driv 18s linear infinite;
-  }
-  @keyframes driv { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  .hero-innhold { position: relative; z-index: 2; }
-  .hero-innhold img {
-    width: 64px; height: 64px; border-radius: 15px;
-    box-shadow: 0 8px 22px rgba(0,0,0,.35);
-  }
-  .merke {
-    display: block; margin-top: 18px; font-size: .8rem; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase; color: var(--korall);
-  }
-  h1 { font-size: clamp(1.9rem, 6vw, 2.5rem); font-weight: 800; margin-top: 4px; }
-  .dato { color: var(--tekst3); font-size: .9rem; margin-top: 6px; }
+  /* Kartbladene (§ 9) stablet bak hele siden, og rammen fra 900 px */
+  .kart { position: absolute; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; overflow-anchor: none; }
+  .kart img { display: block; width: 100%; height: auto; }
+  .ramme { display: none; }
 
-  /* Marint snø, som på forsiden */
-  .sno { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-  .sno i {
-    position: absolute; top: -12px; width: 3px; height: 3px; border-radius: 50%;
-    background: rgba(244,249,252,.32); left: var(--x);
-    animation: snofall var(--t, 28s) linear var(--d, 0s) infinite;
+  /* Spalten. Bak den viskes kartet ut (lysningen), så loddskuddene
+     aldri står bak lang tekst. Males én gang. */
+  .spalte { position: relative; z-index: 2; max-width: calc(36rem + 2 * var(--pol)); margin: 0 auto; padding: 0 var(--pol); }
+  .spalte::before {
+    content: ""; position: absolute; z-index: -1; left: 0; right: 0;
+    top: calc(max(56px, env(safe-area-inset-top) + 24px) - 18px); bottom: 26px; border-radius: 40px;
+    background: rgba(13,46,76,.9); box-shadow: 0 0 48px 40px rgba(13,46,76,.9); pointer-events: none;
   }
-  .sno i.stor { width: 4px; height: 4px; background: rgba(244,249,252,.22); }
-  @keyframes snofall {
-    0%   { transform: translateY(0) translateX(0); opacity: 0; }
-    8%   { opacity: 1; }
-    100% { transform: translateY(105vh) translateX(22px); opacity: .2; }
-  }
-  main, .overflate { position: relative; z-index: 1; }
 
-  main { max-width: 640px; margin: 0 auto; padding: 28px 24px 24px; }
-  .tilbake {
-    display: inline-block; margin-bottom: 22px; padding: 9px 16px;
-    border-radius: 999px; font-size: .9rem; font-weight: 650;
-    text-decoration: none; color: var(--tekst);
-    background: var(--glass); border: 1px solid var(--glasskant);
-    transition: transform .15s ease;
+  /* Toppen */
+  .topp { padding-top: max(56px, env(safe-area-inset-top) + 24px); }
+  .ikonlenke { display: inline-block; border-radius: 14px; line-height: 0; }
+  .ikonlenke:focus-visible { border-radius: 18px; }
+  .ikonlenke img { width: 64px; height: 64px; border-radius: 14px; box-shadow: 0 0 0 1px rgba(244,249,252,.18); }
+  h1 {
+    margin-top: 20px; font: 800 clamp(2.4rem, 10vw, 3.6rem)/1 var(--rund); letter-spacing: -.035em;
+    color: var(--skum); text-wrap: balance;
   }
-  .tilbake:hover { transform: translateY(-1px); }
-  .kortversjon {
-    padding: 22px 24px; border-radius: 20px; font-size: 1.05rem; line-height: 1.7;
-    background: rgba(255,156,140,.10); border: 1px solid rgba(255,156,140,.3);
-  }
-  .kortversjon strong { color: var(--korall); }
-  h2 { font-size: clamp(1.25rem, 4vw, 1.45rem); margin: 34px 0 10px; }
-  p { color: var(--tekst2); line-height: 1.7; font-size: 1.02rem; }
-  p strong { color: var(--tekst); }
-  p + p { margin-top: 12px; }
-  ul { margin: 10px 0 10px 22px; color: var(--tekst2); }
-  li { margin-top: 6px; }
-  hr { border: none; border-top: 1px solid var(--glasskant); margin: 40px 0 26px; }
-  .en {
-    padding: 22px 24px; border-radius: 20px; font-size: .95rem;
-    background: var(--glass); border: 1px solid var(--glasskant);
-  }
-  .en h2 { margin-top: 0; }
-  .en p { color: var(--tekst3); }
-  .attribusjon {
-    max-width: 640px; margin: 40px auto 0; padding: 0 24px;
-    text-align: center; font-size: .86rem; color: var(--tekst3); line-height: 1.7;
-  }
-  footer {
-    position: relative; z-index: 1; text-align: center;
-    padding: 30px 24px 42px; font-size: .85rem; color: var(--tekst3); line-height: 1.8;
-  }
-  footer a { color: inherit; }
+  h1 .linje { display: block; overflow: hidden; padding: .14em 0 .12em; margin: -.14em 0 -.12em; }
+  h1 .linje > span { display: block; }
+  .dato { margin-top: 12px; font: 13px/1.45 var(--mono); color: var(--tekst2); }
 
-  /* Ro: alt står stille */
+  /* Teksten */
+  h2 { margin: 44px 0 10px; font: 800 clamp(1.4rem, 5.2vw, 1.75rem)/1.15 var(--rund); letter-spacing: -.02em; color: var(--skum); text-wrap: balance; }
+  main p { color: var(--tekst2); text-wrap: pretty; }
+  main p + p { margin-top: 14px; }
+  main p strong { color: var(--skum); font-weight: 650; }
+
+  /* Kartfliken (§ 12.2): et lite sjøkart med gradert ramme, kyst og
+     loddskudd. Påskriften er HTML over figuren. */
+  .kartflik { position: relative; max-width: 520px; margin: 40px 0 0; }
+  .kartflik svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .kartflik .r-ytre { fill: none; stroke: var(--skum); stroke-width: 1.4; }
+  .kartflik .grad { fill: none; stroke: rgba(244,249,252,.42); stroke-width: 1.25; }
+  .kartflik .flate { fill: var(--hav); }
+  .kartflik .land { fill: var(--land); }
+  .kartflik .land-skr { fill: url(#landskravur); }
+  .kartflik .kyst { fill: none; stroke: var(--skum); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+  .kartflik .lodd text { font: italic 15px var(--serif); fill: var(--lodd); text-anchor: middle; }
+  .paaskrift { position: absolute; right: calc(12 / 360 * 100% + 14px); bottom: calc(12 / 220 * 100% + 14px); text-align: right; }
+  .paaskrift span { display: block; white-space: nowrap; }
+  .paaskrift .merk { font: 650 14px/1.3 var(--rund); color: var(--fare); }
+  .paaskrift .dybde { font: italic 13px/1.35 var(--serif); color: var(--tekst2); }
+  .kartflik + h2 { margin-top: 48px; }
+  /* Fra 560 px blir fliken stor: loddskuddene holdes mindre enn påskriften */
+  @media (max-width: 359px) { .kartflik .lodd text { font-size: 16.3px; } }
+  @media (min-width: 560px) { .kartflik .lodd text { font-size: 9.5px; } }
+
+  /* Bunnen */
+  .bunn { margin-top: 64px; padding-bottom: max(48px, env(safe-area-inset-bottom) + 24px); }
+  .bunn nav { display: flex; flex-wrap: wrap; gap: 0 18px; margin-left: -6px; }
+  .bunn nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 6px; font: 600 1rem/1.2 var(--sans); }
+  .bunn nav a[aria-current] { color: var(--tekst3); text-decoration: none; }
+  .bunn .kreditt { margin-top: 14px; font: 14px/1.6 var(--sans); color: var(--tekst3); text-wrap: pretty; }
+  .bunn .versjon { margin-top: 10px; font: 13px/1.5 var(--mono); color: var(--tekst3); }
+
+  /* Bevegelse (§ 13 rad 45 til 50). Startverdiene ligger bak .bev,
+     så sluttilstanden er standard uten skript og ved redusert bevegelse. */
+  .bev h1 .linje > span { transform: translateY(105%); }
+  .bev.klar h1 .linje > span { transform: none; transition: transform 1.1s var(--ut) .1s; }
+  .bev .dato { opacity: 0; }
+  .bev.klar .dato { opacity: 1; transition: opacity .6s var(--ut) .3s; }
+
+  .bev .kartflik .r-ytre, .bev .kartflik .kyst { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .bev .kartflik.inn .r-ytre { stroke-dashoffset: 0; transition: stroke-dashoffset .9s var(--inn-ut); }
+  .bev .kartflik .grad, .bev .kartflik .land, .bev .kartflik .land-skr, .bev .kartflik .lodd text, .bev .kartflik .paaskrift { opacity: 0; }
+  .bev .kartflik.inn .grad { opacity: 1; transition: opacity .3s ease .4s; }
+  .bev .kartflik.inn .kyst { stroke-dashoffset: 0; transition: stroke-dashoffset 1.1s var(--inn-ut) .5s; }
+  .bev .kartflik.inn .land, .bev .kartflik.inn .land-skr { opacity: 1; transition: opacity .6s ease 1.1s; }
+  .bev .kartflik.inn .lodd text { opacity: 1; transition: opacity .3s ease calc(1.2s + 25ms * var(--i)); }
+  .bev .kartflik.inn .paaskrift { opacity: 1; transition: opacity .4s ease 1.8s; }
+
+  @media (max-width: 359px) {
+    :root { --pol: 16px; }
+    body { font-size: 16px; }
+  }
+  @media (min-width: 900px) {
+    :root { --kant: 9px; }
+    body { font-size: 18px; }
+    .ramme { display: block; position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow-anchor: none; }
+    .ramme i {
+      position: absolute; top: 0; bottom: 0; width: var(--kant);
+      background: repeating-linear-gradient(180deg, rgba(244,249,252,.62) 0 64px, transparent 64px 128px);
+      box-shadow: inset 0 0 0 1px rgba(244,249,252,.45);
+    }
+    .ramme i:nth-child(1) { left: 0; }
+    .ramme i:nth-child(2) { right: 0; }
+    .ramme i::after { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(244,249,252,.28); }
+    .ramme i:nth-child(1)::after { left: calc(var(--kant) + 3px); }
+    .ramme i:nth-child(2)::after { right: calc(var(--kant) + 3px); }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 </style>
 </head>
 <body>
+<a class="hopp" href="#innhold">Hopp til innholdet</a>
 
-<header class="overflate">
-  <div class="scene" aria-hidden="true">
-    <div class="solglod"></div>
-    <div class="vannlinje vl-1">
-      <svg viewBox="0 0 1600 26" preserveAspectRatio="none">
-        <path d="M0,13 C100,5 200,21 400,13 C600,5 700,21 800,13 C900,5 1000,21 1200,13 C1400,5 1500,21 1600,13"
-              fill="none" stroke="rgba(244,249,252,.55)" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div class="vannlinje vl-2">
-      <svg viewBox="0 0 1600 26" preserveAspectRatio="none">
-        <path d="M0,13 C100,5 200,21 400,13 C600,5 700,21 800,13 C900,5 1000,21 1200,13 C1400,5 1500,21 1600,13"
-              fill="none" stroke="rgba(244,249,252,.55)" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div class="sjo">
-      <svg viewBox="0 0 2400 100" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="vann" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#1A4A72"/>
-            <stop offset="1" stop-color="#1A4A72" stop-opacity="0"/>
-          </linearGradient>
-        </defs>
-        <path d="M0,38 C200,24 380,52 600,38 C820,26 1000,50 1200,38
-                 C1400,24 1580,52 1800,38 C2020,26 2200,50 2400,38
-                 L2400,100 L0,100 Z" fill="url(#vann)"/>
-        <path d="M0,38 C200,24 380,52 600,38 C820,26 1000,50 1200,38
-                 C1400,24 1580,52 1800,38 C2020,26 2200,50 2400,38"
-              fill="none" stroke="#F4F9FC" stroke-width="4" stroke-linecap="round"/>
-      </svg>
-    </div>
-  </div>
-  <div class="hero-innhold">
-    <a href="/hummerfiske/"><img src="/hummerfiske/ikon.png" alt="Hummerfiske-ikonet"></a>
-    <span class="merke">Hummerfiske</span>
-    <h1>Vilkår</h1>
-    <p class="dato">Sist oppdatert 1. september 2026</p>
-  </div>
+<div class="kart" aria-hidden="true">
+  <picture>
+    <source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-02.svg" width="1440" height="1000">
+    <source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-02.svg" width="720" height="1000">
+    <img src="/hummerfiske/bilder/kart/smal-02.svg" width="400" height="1000" alt="" decoding="async">
+  </picture>
+  <picture>
+    <source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-03.svg" width="1440" height="1000">
+    <source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-03.svg" width="720" height="1000">
+    <img src="/hummerfiske/bilder/kart/smal-03.svg" width="400" height="1000" alt="" decoding="async">
+  </picture>
+  <picture>
+    <source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-04.svg" width="1440" height="1000">
+    <source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-04.svg" width="720" height="1000">
+    <img src="/hummerfiske/bilder/kart/smal-04.svg" width="400" height="1000" alt="" loading="lazy" decoding="async">
+  </picture>
+  <picture>
+    <source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-05.svg" width="1440" height="1000">
+    <source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-05.svg" width="720" height="1000">
+    <img src="/hummerfiske/bilder/kart/smal-05.svg" width="400" height="1000" alt="" loading="lazy" decoding="async">
+  </picture>
+  <picture>
+    <source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-06.svg" width="1440" height="1000">
+    <source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-06.svg" width="720" height="1000">
+    <img src="/hummerfiske/bilder/kart/smal-06.svg" width="400" height="1000" alt="" loading="lazy" decoding="async">
+  </picture>
+  <picture>
+    <source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-07.svg" width="1440" height="1000">
+    <source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-07.svg" width="720" height="1000">
+    <img src="/hummerfiske/bilder/kart/smal-07.svg" width="400" height="1000" alt="" loading="lazy" decoding="async">
+  </picture>
+  <picture>
+    <source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-08.svg" width="1440" height="1000">
+    <source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-08.svg" width="720" height="1000">
+    <img src="/hummerfiske/bilder/kart/smal-08.svg" width="400" height="1000" alt="" loading="lazy" decoding="async">
+  </picture>
+  <picture>
+    <source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-09.svg" width="1440" height="1000">
+    <source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-09.svg" width="720" height="1000">
+    <img src="/hummerfiske/bilder/kart/smal-09.svg" width="400" height="1000" alt="" loading="lazy" decoding="async">
+  </picture>
+  <picture>
+    <source media="(min-width: 900px)" srcset="/hummerfiske/bilder/kart/bred-10.svg" width="1440" height="1000">
+    <source media="(min-width: 560px)" srcset="/hummerfiske/bilder/kart/mellom-10.svg" width="720" height="1000">
+    <img src="/hummerfiske/bilder/kart/smal-10.svg" width="400" height="1000" alt="" loading="lazy" decoding="async">
+  </picture>
+</div>
+<div class="ramme" aria-hidden="true"><i></i><i></i></div>
+
+<div class="spalte">
+<header class="topp">
+  <a class="ikonlenke" href="../"><img src="/hummerfiske/bilder/ikon-160.png" width="64" height="64" alt="Hummerfiske, til forsiden"></a>
+  <h1><span class="linje"><span>Vilkår</span></span></h1>
+  <p class="dato">Hummerfiske · sist&nbsp;oppdatert 1.&nbsp;september&nbsp;2026</p>
 </header>
 
-<div class="sno" aria-hidden="true">
-  <i style="--x:8%;  --t:31s; --d:-4s"></i>
-  <i style="--x:19%; --t:26s; --d:-17s" class="stor"></i>
-  <i style="--x:31%; --t:34s; --d:-9s"></i>
-  <i style="--x:44%; --t:24s; --d:-21s"></i>
-  <i style="--x:57%; --t:29s; --d:-2s" class="stor"></i>
-  <i style="--x:68%; --t:36s; --d:-13s"></i>
-  <i style="--x:79%; --t:27s; --d:-7s"></i>
-  <i style="--x:91%; --t:33s; --d:-19s" class="stor"></i>
-</div>
-
-<main>
-  <a class="tilbake" href="/hummerfiske/">← Til forsiden</a>
+<main id="innhold">
+  <figure class="kartflik" aria-hidden="true">
+    <svg viewBox="0 0 360 220" focusable="false">
+      <defs>
+        <pattern id="landskravur" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
+          <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(244,249,252,.11)" stroke-width="1.1"/>
+        </pattern>
+      </defs>
+      <rect class="flate" x="6" y="6" width="348" height="208"/>
+      <path class="land" d="M12 133.5L20.4 131.6Q28.8 129.6 32.2 121.8Q35.5 113.9 43.9 112Q52.3 110 55.7 104.1Q59 98.2 54 93.3Q49 88.4 57.4 83.5Q65.8 78.6 75.8 80.6Q85.9 82.6 91 76.7Q96 70.8 92.6 64.9Q89.3 59 97.7 55.1Q106.1 51.2 114.5 53.2Q122.9 55.1 127.9 48.3Q133 41.4 129.6 35.5Q126.2 29.6 134.6 26.7Q143 23.8 149.8 17.9L156.5 12L12 12Z"/>
+      <path class="land-skr" d="M12 133.5L20.4 131.6Q28.8 129.6 32.2 121.8Q35.5 113.9 43.9 112Q52.3 110 55.7 104.1Q59 98.2 54 93.3Q49 88.4 57.4 83.5Q65.8 78.6 75.8 80.6Q85.9 82.6 91 76.7Q96 70.8 92.6 64.9Q89.3 59 97.7 55.1Q106.1 51.2 114.5 53.2Q122.9 55.1 127.9 48.3Q133 41.4 129.6 35.5Q126.2 29.6 134.6 26.7Q143 23.8 149.8 17.9L156.5 12L12 12Z"/>
+      <path class="kyst" pathLength="1" d="M12 133.5L20.4 131.6Q28.8 129.6 32.2 121.8Q35.5 113.9 43.9 112Q52.3 110 55.7 104.1Q59 98.2 54 93.3Q49 88.4 57.4 83.5Q65.8 78.6 75.8 80.6Q85.9 82.6 91 76.7Q96 70.8 92.6 64.9Q89.3 59 97.7 55.1Q106.1 51.2 114.5 53.2Q122.9 55.1 127.9 48.3Q133 41.4 129.6 35.5Q126.2 29.6 134.6 26.7Q143 23.8 149.8 17.9L156.5 12"/>
+      <g class="lodd">
+        <text x="186.7" y="70.8" style="--i:0">7</text>
+        <text x="247.2" y="51.2" style="--i:1">12</text>
+        <text x="304.3" y="78.6" style="--i:2">21</text>
+        <text x="133" y="117.8" style="--i:3">4</text>
+        <text x="206.9" y="110" style="--i:4">9</text>
+        <text x="274.1" y="119.8" style="--i:5">18</text>
+        <text x="72.5" y="176.6" style="--i:6">3</text>
+        <text x="119.5" y="161" style="--i:7">6</text>
+        <text x="160" y="134" style="--i:8">11</text>
+      </g>
+      <path class="grad" d="M12 12H348V208H12ZM30 6v6M30 214v-6M48 6v6M48 214v-6M66 6v6M66 214v-6M84 6v6M84 214v-6M102 6v6M102 214v-6M120 6v6M120 214v-6M138 6v6M138 214v-6M156 6v6M156 214v-6M174 6v6M174 214v-6M192 6v6M192 214v-6M210 6v6M210 214v-6M228 6v6M228 214v-6M246 6v6M246 214v-6M264 6v6M264 214v-6M282 6v6M282 214v-6M300 6v6M300 214v-6M318 6v6M318 214v-6M336 6v6M336 214v-6M6 30h6M354 30h-6M6 48h6M354 48h-6M6 66h6M354 66h-6M6 84h6M354 84h-6M6 102h6M354 102h-6M6 120h6M354 120h-6M6 138h6M354 138h-6M6 156h6M354 156h-6M6 174h6M354 174h-6M6 192h6M354 192h-6"/>
+      <path class="r-ytre" pathLength="1" d="M6 6H354V214H6Z"/>
+    </svg>
+    <p class="paaskrift"><span class="merk">ikke til navigasjon</span><span class="dybde">dybder er veiledende</span></p>
+  </figure>
 
   <h2>Om disse vilkårene</h2>
   <p>Hummerfiske er utviklet av Daniel Hellenes som privatperson.
@@ -206,13 +279,13 @@
   <p><strong>Appen er ikke fasit for regelverket.</strong> Regler,
   soner og datoer kan endres, og dataene i appen kan være ufullstendige
   eller utdaterte. Du er selv ansvarlig for å kjenne og følge
-  gjeldende regler — kontroller alltid hos
+  gjeldende regler. Kontroller alltid hos
   <a href="https://www.fiskeridir.no/fritidsfiske">Fiskeridirektoratet</a>.</p>
   <p><strong>Appen skal ikke brukes til navigasjon.</strong> Sjøkartet
   i appen er ikke godkjent for navigasjon og erstatter ikke offisielle
   sjøkart eller navigasjonsutstyr. Dybder er veiledende.</p>
   <p>Du er selv ansvarlig for beslutninger du tar på grunnlag av
-  informasjon fra appen — også varsler som uteblir eller kommer sent.</p>
+  informasjon fra appen, også varsler som uteblir eller kommer sent.</p>
 
   <h2>Levering «som den er»</h2>
   <p>Appen leveres som den er, med de funksjonene den har til enhver
@@ -241,16 +314,16 @@
 
   <h2>Ansvarsbegrensning</h2>
   <p>Jeg er ikke ansvarlig for indirekte tap, følgeskader eller tap
-  som skyldes bruk av eller manglende mulighet til å bruke appen —
+  som skyldes bruk av eller manglende mulighet til å bruke appen,
   herunder gebyrer, reaksjoner eller tap som følge av brudd på
-  fiskeriregelverket — i den utstrekning dette kan begrenses etter
+  fiskeriregelverket, i den utstrekning dette kan begrenses etter
   norsk rett.</p>
   <p>Ingenting i disse vilkårene begrenser rettigheter du har som
   forbruker etter ufravikelig norsk lovgivning.</p>
 
   <h2>Personvern</h2>
   <p>Appen samler ikke inn personopplysninger.
-  Se <a href="/hummerfiske/personvern/">personvernerklæringen</a>.</p>
+  Se <a href="../personvern/">personvernerklæringen</a>.</p>
 
   <h2>Endringer</h2>
   <p>Disse vilkårene kan bli endret. Gjeldende versjon ligger alltid
@@ -261,15 +334,68 @@
   <a href="mailto:danielhellenes@me.com">danielhellenes@me.com</a></p>
 </main>
 
-<p class="attribusjon">Appen er et hjelpemiddel, ikke fasit. Kontroller alltid gjeldende
-regler hos Fiskeridirektoratet. Ikke til navigasjon.</p>
-
-<footer>
-  © 2026 Daniel Hellenes ·
-  <a href="/hummerfiske/">Forsiden</a> ·
-  <a href="/hummerfiske/personvern/">Personvern</a> ·
-  <a href="/hummerfiske/vilkar/">Vilkår</a>
+<footer class="bunn">
+  <nav aria-label="Hummerfiske">
+    <a href="../">Forsiden</a>
+    <a href="../personvern/">Personvern</a>
+    <a href="./" aria-current="page">Vilkår</a>
+  </nav>
+  <p class="kreditt">Appen er et hjelpemiddel, ikke fasit. Kontroller alltid gjeldende regler hos Fiskeridirektoratet. Ikke til navigasjon.</p>
+  <p class="versjon">© 2026 Daniel Hellenes</p>
 </footer>
+</div>
 
+<script>
+/* Ingen løkke og ingen layoutlesing: kartfliken tegnes av CSS-overganger
+   én gang når den kommer i bildet. */
+(function () {
+  'use strict';
+  var d = document.documentElement, dod = false;
+  function nodbrems(e) {
+    if (dod) return; dod = true;
+    d.classList.remove('js', 'bev', 'klar');
+    try { console.warn('hummerfiske: skriptet feilet, viser den stille siden', e); } catch (x) {}
+  }
+  function vakt(fn) { return function () { if (dod) return; try { return fn.apply(this, arguments); } catch (e) { nodbrems(e); } }; }
+
+  try {
+    var figur = document.querySelector('.kartflik');
+    var rolig = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+
+    // Modus (§ 14): levende eller stille. Byttes ved rotasjon, breddeendring
+    // og endring av redusert bevegelse. Går siden over til levende midt i,
+    // står figuren allerede ferdig.
+    function modus() {
+      var h = window.innerHeight;
+      var vil = !(rolig && rolig.matches) && h >= 420 && h <= 2200;
+      if (vil === d.classList.contains('bev')) return;
+      if (vil) { figur.classList.add('inn'); d.classList.add('klar', 'bev'); }
+      else d.classList.remove('bev');
+    }
+
+    // Ved innsyn (§ 13): én gang, med en nedre margin på 14 %.
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(vakt(function (ents) {
+        ents.forEach(function (en) { if (en.isIntersecting) { figur.classList.add('inn'); io.disconnect(); } });
+      }), { rootMargin: '0px 0px -14% 0px' });
+      io.observe(figur);
+    } else figur.classList.add('inn');
+
+    var tid = 0;
+    window.addEventListener('resize', vakt(function () {
+      clearTimeout(tid);
+      tid = setTimeout(vakt(modus), 160);
+    }));
+    if (rolig) {
+      var bytt = vakt(modus);
+      if (rolig.addEventListener) rolig.addEventListener('change', bytt); else if (rolig.addListener) rolig.addListener(bytt);
+    }
+
+    // Toppen kommer fram etter første maling.
+    requestAnimationFrame(vakt(function () { requestAnimationFrame(vakt(function () { d.classList.add('klar'); })); }));
+    d.classList.add('i-gang');
+  } catch (e) { nodbrems(e); }
+})();
+</script>
 </body>
 </html>
